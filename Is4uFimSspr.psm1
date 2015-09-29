@@ -82,8 +82,8 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 	
 	$wf = Get-FimObject -Value "Password Reset AuthN Workflow" -Attribute DisplayName -ObjectType WorkflowDefinition
 	$mpr = Get-FimObject -Value "Anonymous users can reset their password" -Attribute DisplayName -ObjectType ManagementPolicyRule
-    [UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
-    [UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
+	[UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
+	[UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
 
 	foreach($language in $root.Elements("Language")) {
         [UniqueIdentifier] $setId = [Guid]::Empty
