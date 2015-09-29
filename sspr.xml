@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+	<Language Name="English">
+		<Set DisplayName="All English Users">
+			<Filter>/Person[PreferredLanguage='EN']</Filter>
+		</Set>
+		<Workflow DisplayName="Password Reset AuthN Workflow EN">
+			<Constraint>Each answer must contain at least four characters, and no two answers may be the same.</Constraint>
+			<Error>Answer is duplicated or has less than four characters.</Error>
+			<Question>What is the answer to the universe and everything?</Question>
+			<Question>How many toes do you have?</Question>
+		</Workflow>
+		<MPR DisplayName="Anonymous English users can reset their password" />
+	</Language>
+	<Language Name="French">
+		<Set DisplayName="All French Users">
+			<Filter>/Person[PreferredLanguage='FR']</Filter>
+		</Set>
+		<Workflow DisplayName="Password Reset AuthN Workflow FR">
+			<Constraint>Constraint Français.</Constraint>
+			<Error>Erreur Français.</Error>
+			<Question>Quelle est la réponse à l'univers et tout?</Question>
+			<Question>Combien d'orteils avez-vous?</Question>
+		</Workflow>
+		<MPR DisplayName="Anonymous French users can reset their password" />
+	</Language>
+	<Language Name="Dutch">
+		<Set DisplayName="All Dutch Users">
+			<Filter>/Person[PreferredLanguage='NL']</Filter>
+		</Set>
+		<Workflow DisplayName="Password Reset AuthN Workflow NL">
+			<Constraint>Nederlandse constraint.</Constraint>
+			<Error>Nederlandse Error.</Error>
+			<Question>Wat is het antwoord op het universum en alles?</Question>
+			<Question>Hoeveel tenen hebt u?</Question>
+		</Workflow>
+		<MPR DisplayName="Anonymous Dutch users can reset their password" />
+	</Language>
+</Config>
