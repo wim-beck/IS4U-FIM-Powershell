@@ -73,9 +73,9 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 
 	$sessionState = New-Object System.Management.Automation.SessionState
 	$current = [System.IO.Directory]::GetCurrentDirectory()
-    [System.IO.Directory]::SetCurrentDirectory($sessionState.Path.CurrentFileSystemLocation.Path)
-    $ConfigFile = [System.IO.Path]::GetFullPath($ConfigFile)
-    [System.IO.Directory]::SetCurrentDirectory($current)
+	[System.IO.Directory]::SetCurrentDirectory($sessionState.Path.CurrentFileSystemLocation.Path)
+	$ConfigFile = [System.IO.Path]::GetFullPath($ConfigFile)
+	[System.IO.Directory]::SetCurrentDirectory($current)
 
 	$config = [XDocument]::Load($ConfigFile)
 	$root = [XElement] $config.Root
@@ -86,19 +86,19 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 	[UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
 
 	foreach($language in $root.Elements("Language")) {
-        [UniqueIdentifier] $setId = [Guid]::Empty
-        [UniqueIdentifier] $wfId = [Guid]::Empty
-        [UniqueIdentifier] $mprId = [Guid]::Empty
-        
+		[UniqueIdentifier] $setId = [Guid]::Empty
+		[UniqueIdentifier] $wfId = [Guid]::Empty
+		[UniqueIdentifier] $mprId = [Guid]::Empty
+
 		$setConfig = $language.Element("Set")
 		$setName = $setConfig.Attribute("DisplayName").Value
 		$condition = $setConfig.Element("Filter").Value
 		$setExists = Test-ObjectExists -Value $setName -Attribute DisplayName -ObjectType Set
 		if($setExists){
-            Write-Host "Update existing set '$setName'"
+			Write-Host "Update existing set '$setName'"
 			$setId = Update-Set -DisplayName $setName -Condition $condition
 		} else {
-            Write-Host "Create set '$setName'"
+			Write-Host "Create set '$setName'"
 			$setId = New-Set -DisplayName $setName -Condition $condition
 		}
 
@@ -119,19 +119,19 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 		$wfExists = Test-ObjectExists -Value $wfName -Attribute DisplayName -ObjectType WorkflowDefinition
 		if($wfExists){
 			Write-Host "Update existing wf '$wfName'"
-            $wfId = Update-Workflow -DisplayName $wfName -Xoml $xoml
+			$wfId = Update-Workflow -DisplayName $wfName -Xoml $xoml
 		} else {
-            Write-Host "Create wf '$wfName'"
+			Write-Host "Create wf '$wfName'"
 			$wfId = New-Workflow -DisplayName $wfName -RequestPhase Authentication -Xoml $xoml
 		}
 
 		$mprName = $language.Element("MPR").Attribute("DisplayName").Value
 		$mprExists = Test-ObjectExists -Value $mprName -Attribute DisplayName -ObjectType ManagementPolicyRule
 		if($mprExists){
-            Write-Host "Update existing MPR '$mprName'"
+			Write-Host "Update existing MPR '$mprName'"
 			$mprId = Update-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId
 		} else {
-            Write-Host "Create MPR '$mprName'"
+			Write-Host "Create MPR '$mprName'"
 			$mprId = New-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId
 		}
 		

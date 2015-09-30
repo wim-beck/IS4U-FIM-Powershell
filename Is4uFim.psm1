@@ -132,8 +132,8 @@ Create a new management policy rule.
 		[UniqueIdentifier]
 		$ActionWfId,
 
-        [Parameter(Mandatory=$True)]
-        [UniqueIdentifier]
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
 		$PrincipalSetId,
 		
 		[Parameter(Mandatory=$True)]
@@ -199,8 +199,8 @@ Update management policy rule
 		[UniqueIdentifier]
 		$ActionWfId,
 
-        [Parameter(Mandatory=$True)]
-        [UniqueIdentifier]
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
 		$PrincipalSetId,
 		
 		[Parameter(Mandatory=$True)]
@@ -377,7 +377,7 @@ Test-ObjectExists -Value is4u.admin -Attribute AccountName -ObjectType Person
 		[String]
 		$ObjectType = "Person"	
 	)
-    $obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
+	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
 	$exists = $obj -ne $null
 	return $exists
 }
@@ -413,6 +413,6 @@ PS C:\$ Get-FimObject -Attribute DisplayName -Value Administrators -ObjectType S
 		[String]
 		$ObjectType = "Person"	
 	)
-    $obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
+	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
 	return $obj
 }
