@@ -51,9 +51,9 @@ New-AttributeAndBinding -AttrName Visa -DisplayName "Visa Card Number" -Type Str
 		$ObjectType = "Person"
 	)
 
-    [UniqueIdentifier] $attrId = New-Attribute -Name $Name -DisplayName $DisplayName -Type $Type -MultiValued $MultiValued
+	[UniqueIdentifier] $attrId = New-Attribute -Name $Name -DisplayName $DisplayName -Type $Type -MultiValued $MultiValued
 	$obj = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
-    New-AttributeBinding -AttrName $Name -DisplayName $DisplayName -ObjectType $obj
+	New-AttributeBinding -AttrName $Name -DisplayName $DisplayName -ObjectType $obj
 	if($ObjectType -eq "Person"){
 		Add-AttributeToMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Add-AttributeToMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
