@@ -416,3 +416,255 @@ PS C:\$ Get-FimObject -Attribute DisplayName -Value Administrators -ObjectType S
 	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
 	return $obj
 }
+
+Function New-Attribute
+{
+<#
+.SYNOPSIS
+Create a new attribute in the FIM Portal schema.
+
+.DESCRIPTION
+Create a new attribute in the FIM Portal schema.
+
+.EXAMPLE
+New-Attribute -Name Visa -Type String -MultiValue $false
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Name,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		[ValidateScript({("String", "DateTime", "Integer", "Reference", "Boolean", "Text", "Binary") -contains $_})]
+		$Type,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$MultiValued
+	)
+    $changes = @{}
+    $changes.Add("DisplayName", $DisplayName)
+    $changes.Add("Name", $Name)
+    $changes.Add("DataType", $Type)
+    $changes.Add("Multivalued", $MultiValued)
+    New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow
+	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	return $id
+}
+
+Function Remove-Attribute
+{
+<#
+.SYNOPSIS
+Remove an attribute from the FIM Portal schema.
+
+.DESCRIPTION
+Remove an attribute from the FIM Portal schema.
+
+.EXAMPLE
+Remove-Attribute -AttrName Visa
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Name
+	)
+	$anchor = @{"Name"=$Name}
+    New-FimImportObject -ObjectType AttributeTypeDescription -State Delete -AnchorPairs $anchor -ApplyNow
+}
+
+Function New-AttributeBinding
+{
+<#
+.SYNOPSIS
+Create a new attribute binding in the FIM Portal schema.
+
+.DESCRIPTION
+Create a new attribute binding in the FIM Portal schema.
+
+.EXAMPLE
+New-AttributeBinding -AttrName Visa -DisplayName "Visa Card Number" -ObjectType Person
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttrName, 
+	
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName, 
+	
+		[Parameter(Mandatory=$False)]
+		[String]
+		$ObjectType = "Person"
+	)
+	$attr = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttrName
+	$changes = @{}
+	$changes.Add("Required", $false)
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("BoundAttributeType", $attr)
+	$changes.Add("BoundObjectType", $ObjectType)
+	New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow
+}
+
+Function Remove-AttributeBinding
+{
+<#
+.SYNOPSIS
+Remove an attribute binding from the FIM Portal schema.
+
+.DESCRIPTION
+Remove an attribute binding from the FIM Portal schema.
+
+.EXAMPLE
+Remove-AttributeBinding -AttrName Visa
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Name
+	)
+	$attr = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name
+    $anchor = @{"BoundAttributeType"=$attr}
+    New-FimImportObject -ObjectType BindingDescription -State Delete -AnchorPairs $anchor -ApplyNow
+}
+
+Function Add-AttributeToMPR
+{
+<#
+.SYNOPSIS
+Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+
+.DESCRIPTION
+Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+
+.EXAMPLE
+Add-AttributeToMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttrName,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$MprName
+	)
+    $anchor = @{'DisplayName' = $MprName}
+    $changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+    New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-AttributeFromMPR
+{
+<#
+.SYNOPSIS
+Removes an attribute from the list of selected attributes in the scope of the management policy rule.
+
+.DESCRIPTION
+Removes an attribute from the list of selected attributes in the scope of the management policy rule.
+
+.EXAMPLE
+Remove-AttributeFromMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttrName,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$MprName
+	)
+    $anchor = @{'DisplayName' = $MprName}
+    $changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+    New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Add-AttributeToFilterScope
+{
+<#
+.SYNOPSIS
+Adds an attribute to the filter scope.
+
+.DESCRIPTION
+Adds an attribute to the filter scope.
+
+.EXAMPLE
+[UniqueIdentifier] $attrId = New-Attribute -Name TestAttribute -DisplayName "Test Attribute" -Type String
+Add-AttributeToFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$Attribute,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$DisplayName = "Administrator Filter Permission"
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'AllowedAttributes' -AttributeValue $Attribute.ToString())
+	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-AttributeFromFilterScope
+{
+<#
+.SYNOPSIS
+Removes an attribute from the filter scope.
+
+.DESCRIPTION
+Removes an attribute from the filter scope.
+
+.EXAMPLE
+[UniqueIdentifier] $attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue TestAttribute
+Remove-AttributeFromFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$Attribute,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$DisplayName = "Administrator Filter Permission"
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'AllowedAttributes' -AttributeValue $Attribute.ToString())
+	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-FimObject
+{
+<#
+.SYNOPSIS
+Delete an object.
+
+.DESCRIPTION
+Delete an object given the object type, anchor attribute and anchor value.
+
+.EXAMPLE
+Remove-FimObject -AnchorName AccountName -AnchorValue mickey.mouse -ObjectType Person
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AnchorName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AnchorValue,
+		
+		[Parameter(Mandatory=$False)]
+		[String]
+		$ObjectType = "Person"
+	)
+	$anchor = @{$AnchorName = $AnchorValue}
+	New-FimImportObject -ObjectType $ObjectType -State Delete -AnchorPairs $anchor -ApplyNow
+}
