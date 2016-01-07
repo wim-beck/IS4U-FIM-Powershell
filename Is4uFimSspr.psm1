@@ -70,20 +70,13 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 		$ConfigFile
 	)
 	Add-TypeAccelerators -Assembly System.Xml.Linq -Class XAttribute
-
-	$sessionState = New-Object System.Management.Automation.SessionState
-	$current = [System.IO.Directory]::GetCurrentDirectory()
-	[System.IO.Directory]::SetCurrentDirectory($sessionState.Path.CurrentFileSystemLocation.Path)
-	$ConfigFile = [System.IO.Path]::GetFullPath($ConfigFile)
-	[System.IO.Directory]::SetCurrentDirectory($current)
-
-	$config = [XDocument]::Load($ConfigFile)
+	$config = [XDocument]::Load((Join-Path $pwd $ConfigFile))
 	$root = [XElement] $config.Root
 	
 	$wf = Get-FimObject -Value "Password Reset AuthN Workflow" -Attribute DisplayName -ObjectType WorkflowDefinition
 	$mpr = Get-FimObject -Value "Anonymous users can reset their password" -Attribute DisplayName -ObjectType ManagementPolicyRule
-	[UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
-	[UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
+    [UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
+    [UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
 
 	foreach($language in $root.Elements("Language")) {
 		[UniqueIdentifier] $setId = [Guid]::Empty
