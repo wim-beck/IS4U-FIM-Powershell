@@ -1,15 +1,15 @@
 SystemName,DisplayName,DataType,MultiValued,ObjectType
-AccountExpires,Account vervaldatum,DateTime,False,Person
-WhenCreated,Account aangemaakt op,DateTime,False,Person
-BirthDay,Geboortedatum,DateTime,False,Person
-EmployeeNumber,EmployeeNr,String,False,Person
-IsDisabled,Gebruiker disabled?,Boolean,False,Person
-IsTemp,Tijdelijke gebruiker?,Boolean,False,Person
-IsRole,Role groep,Boolean,False,Group
-IsTeam,Team groep,Boolean,False,Group
-RoleDistributionList,Role krijgt een distributie lijst,Boolean,False,Group
-RoleSharedFolder,Role krijgt een shared folder,Boolean,False,Group
-TeamDistributionList,Team krijgt een distributie lijst,Boolean,False,Group
-TeamSharedFolder,Team krijgt een shared folder,Boolean,False,Group
-TeamSharedMailbox,Team krijgt een shared mailbox,Boolean,False,Group
-OTPService,OTP aanvraag via sms of email,String,False,User
+AccountExpires,Account expiration date,DateTime,False,Person
+WhenCreated,Account created on,DateTime,False,Person
+BirthDay,Birth date,DateTime,False,Person
+EmployeeNumber,Employee number,String,False,Person
+IsDisabled,User account disabled,Boolean,False,Person
+IsTemp,Temporary user,Boolean,False,Person
+IsRole,Role group,Boolean,False,Group
+IsTeam,Team group,Boolean,False,Group
+RoleDistributionList,Role gets a distribution list,Boolean,False,Group
+RoleSharedFolder,Role gets a shared folder,Boolean,False,Group
+TeamDistributionList,Team gets a distribution list,Boolean,False,Group
+TeamSharedFolder,Team gets a shared folder,Boolean,False,Group
+TeamSharedMailbox,Team gets a shared mailbox,Boolean,False,Group
+OTPService,OTP request via SMS or email,String,False,User
