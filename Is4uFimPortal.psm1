@@ -43,8 +43,8 @@ New-AttributeAndBinding -AttrName Visa -DisplayName "Visa Card Number" -Type Str
 		$Type, 
 		
 		[Parameter(Mandatory=$False)]
-		[Boolean]
-		$MultiValued = $False,
+		[String]
+		$MultiValued = "False",
 		
 		[Parameter(Mandatory=$False)]
 		[String]
@@ -90,3 +90,24 @@ Remove-AttributeAndBinding -AttrName Visa
 	Remove-Attribute $Name
 }
 
+Function Import-SchemaExtensions {
+<#
+.SYNOPSIS
+Create new attributes and bindings based on data in given CSV file.
+
+.DESCRIPTION
+Create new attributes and bindings based on data in given CSV file.
+
+.EXAMPLE
+Import-SchemaExtensions -CsvFile ".\SchemaExtensions.csv"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$CsvFile
+	)
+	$csv = Import-Csv $CsvFile
+	ForEach ($entry in $csv) {
+		New-AttributeAndBinding -Name $entry.SystemName -DisplayName $entry.DisplayName -Type $entry.DataType -MultiValued $entry.MultiValued -ObjectType $entry.ObjectType
+	}
+}
