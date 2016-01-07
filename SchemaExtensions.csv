@@ -12,4 +12,4 @@ RoleSharedFolder,Role gets a shared folder,Boolean,False,Group
 TeamDistributionList,Team gets a distribution list,Boolean,False,Group
 TeamSharedFolder,Team gets a shared folder,Boolean,False,Group
 TeamSharedMailbox,Team gets a shared mailbox,Boolean,False,Group
-OTPService,OTP request via SMS or email,String,False,User
+OTPService,OTP request via SMS or email,String,False,Person
