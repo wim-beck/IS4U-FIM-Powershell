@@ -14,17 +14,16 @@ A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
-Import-Module .\Is4u.psm1
-Import-Module .\Is4uFim.psm1
+Import-Module .\Is4uFimPortal.psm1
 
 Function Enable-Sspr
 {
 <#
-.SYNOPSIS
-Enables all MPR's required for SSPR.
+	.SYNOPSIS
+	Enables all MPR's required for SSPR.
 
-.DESCRIPTION
-Enables all MPR's required for SSPR.
+	.DESCRIPTION
+	Enables all MPR's required for SSPR.
 #>
 	Enable-Mpr "Anonymous users can reset their password"
 	Enable-Mpr "Password reset users can read password reset objects"
@@ -37,11 +36,11 @@ Enables all MPR's required for SSPR.
 Function Disable-Sspr
 {
 <#
-.SYNOPSIS
-Disables some MPR's required for SSPR.
+	.SYNOPSIS
+	Disables some MPR's required for SSPR.
 
-.DESCRIPTION
-Disables some MPR's required for SSPR.
+	.DESCRIPTION
+	Disables some MPR's required for SSPR.
 #>
 	Disable-Mpr "Anonymous users can reset their password"
 	Disable-Mpr "Password reset users can read password reset objects"
@@ -52,17 +51,17 @@ Disables some MPR's required for SSPR.
 Function Install-LocalizedSspr
 {
 <#
-.SYNOPSIS
-Installs a Q&A SSPR configuration for other languages than the default based on the configuration in
-workflow "Password Reset AuthN Workflow".
+	.SYNOPSIS
+	Installs a Q&A SSPR configuration for other languages than the default based on the configuration in
+	workflow "Password Reset AuthN Workflow".
 
-.DESCRIPTION
-Installs a Q&A SSPR configuration for other languages than the default based on the configuration in
-workflow "Password Reset AuthN Workflow".
-More detailed configuration info is delivered by an xml configuration file.
+	.DESCRIPTION
+	Installs a Q&A SSPR configuration for other languages than the default based on the configuration in
+	workflow "Password Reset AuthN Workflow".
+	More detailed configuration info is delivered by an xml configuration file.
 
-.EXAMPLE
-Install-LocalizedSspr -ConfigFile .\sspr.xml
+	.EXAMPLE
+	Install-LocalizedSspr -ConfigFile .\sspr.xml
 #>	
 	param(
 		[Parameter(Mandatory=$True)]
@@ -72,11 +71,11 @@ Install-LocalizedSspr -ConfigFile .\sspr.xml
 	Add-TypeAccelerators -Assembly System.Xml.Linq -Class XAttribute
 	$config = [XDocument]::Load((Join-Path $pwd $ConfigFile))
 	$root = [XElement] $config.Root
-	
+
 	$wf = Get-FimObject -Value "Password Reset AuthN Workflow" -Attribute DisplayName -ObjectType WorkflowDefinition
 	$mpr = Get-FimObject -Value "Anonymous users can reset their password" -Attribute DisplayName -ObjectType ManagementPolicyRule
-    [UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
-    [UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
+	[UniqueIdentifier] $actionWfId = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue "Password Reset Action Workflow"
+	[UniqueIdentifier] $principalSetId = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue "Anonymous users"
 
 	foreach($language in $root.Elements("Language")) {
 		[UniqueIdentifier] $setId = [Guid]::Empty
