@@ -21,6 +21,52 @@ if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
 Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
+Function Set-ObjectSid
+{
+<#
+	.SYNOPSIS
+	Add an object to the explicit members of a set.
+
+	.DESCRIPTION
+	Add an object to the explicit members of a set.
+
+	.EXAMPLE
+	Add-ObjectToSet -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AccountName,
+		
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Domain
+	)
+	$objExists = $False
+	if($Domain -ne "") {
+		if(Test-ObjectExists -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']") {
+			$objExists = $True
+			$object = Get-FimObject -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']"
+		}
+	} else {
+		if(Test-ObjectExists -Value $AccountName) {
+			$objExists = $True
+			$object = Get-FimObject -Value $AccountName
+		}
+	}
+	if($objExists) {
+		Write-Host " -Reading account information"
+		$accountSid = Get-ObjectSid $AccountName $Domain
+		[UniqueIdentifier] $objectId = $object.ObjectID
+		$anchor = @{'ObjectID' = $objectId.Value}
+		$changes = @{"ObjectSID" = $accountSid}
+		Write-Host " -Writing Account information ObjectSID = $accountSid"
+		New-FimImportObject -ObjectType Person -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	} else {
+		Throw "Cannot find an account by that name"
+	}
+}
+
 Function Add-ObjectToSet
 {
 <#
@@ -380,7 +426,7 @@ Function Test-ObjectExists
 	Test-ObjectExists -Value is4u.admin -Attribute AccountName -ObjectType Person	
 #>
 	param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
 		[String]
 		$Value,
 	
@@ -388,11 +434,21 @@ Function Test-ObjectExists
 		[String]
 		$Attribute = "AccountName",
 	
-		[Parameter(Mandatory=$false)] 
+		[Parameter(Mandatory=$False)] 
 		[String]
-		$ObjectType = "Person"	
+		$ObjectType = "Person",
+
+		[Parameter(Mandatory=$False)] 
+		[String]
+		$Filter
 	)
-	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
+	if($Filter -ne "") {
+		$obj = Export-FIMConfig -CustomConfig $Filter -OnlyBaseResources
+	} elseif($Value -ne "") {
+		$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
+	} else {
+		Throw "No search criteria specified"
+	}
 	$exists = $obj -ne $null
 	return $exists
 }
@@ -409,14 +465,14 @@ Function Get-FimObject
 	by providing the Attribute and ObjectType parameters.
 
 	.EXAMPLE
-	PS C:\$ Get-FimObject is4u.admin
+	Get-FimObject is4u.admin
 
-	PS C:\$ Get-FimObject -Attribute DisplayName -Value "IS4U Administrator"
+	Get-FimObject -Attribute DisplayName -Value "IS4U Administrator"
 
-	PS C:\$ Get-FimObject -Attribute DisplayName -Value Administrators -ObjectType Set
+	Get-FimObject -Attribute DisplayName -Value Administrators -ObjectType Set
 #>
 	param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
 		[String]
 		$Value,
 	
@@ -424,11 +480,21 @@ Function Get-FimObject
 		[String]
 		$Attribute = "AccountName",
 	
-		[Parameter(Mandatory=$false)] 
+		[Parameter(Mandatory=$False)] 
 		[String]
-		$ObjectType = "Person"	
+		$ObjectType = "Person",
+
+		[Parameter(Mandatory=$False)] 
+		[String]
+		$Filter
 	)
-	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
+	if($Filter -ne "") {
+		$obj = Export-FIMConfig -CustomConfig $Filter -OnlyBaseResources | Convert-FimExportToPSObject
+	} elseif($Value -ne "") {
+		$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
+	} else {
+		Throw "No search criteria specified"
+	}
 	return $obj
 }
 
