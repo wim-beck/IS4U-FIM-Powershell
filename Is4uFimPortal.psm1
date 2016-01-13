@@ -450,8 +450,7 @@ Function Test-ObjectExists
 	if($obj.GetType().Name -ne "ExportObject") {
 		Throw "Multiple matches found for filter '$searchFilter'"
 	}
-	$exists = $obj -ne $null
-	return $exists
+	return ($obj -ne $null)
 }
 
 Function Get-FimObject
@@ -477,7 +476,7 @@ Function Get-FimObject
 		[String]
 		$Value,
 	
-		[Parameter(Mandatory=$false)] 
+		[Parameter(Mandatory=$False)] 
 		[String]
 		$Attribute = "AccountName",
 	
