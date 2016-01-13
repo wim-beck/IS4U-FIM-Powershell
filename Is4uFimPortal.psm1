@@ -21,6 +21,19 @@ if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
 Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
+Function Enable-PortalAccess
+{
+<#
+	.SYNOPSIS
+	Enables all MPR's required for users to access the FIM Portal.
+
+	.DESCRIPTION
+	Enables all MPR's required for users to access the FIM Portal.
+#>
+	Enable-Mpr "General: Users can read non-administrative configuration resources"
+	Enable-Mpr "User management: Users can read attributes of their own"
+}
+
 Function Set-ObjectSid
 {
 <#
