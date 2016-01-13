@@ -48,7 +48,8 @@ Function Add-TypeAccelerators
 	}
 }
 
-Function Install-DllInGac{
+Function Install-DllInGac
+{
 <#
 	.SYNOPSIS
 	Installs the given dll in the Global Assembly Cache (C:\Windows\Assembly).

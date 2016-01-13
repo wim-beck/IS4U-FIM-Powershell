@@ -43,16 +43,12 @@ Function Set-ObjectSid
 		$Domain
 	)
 	$objExists = $False
-	if($Domain -ne "") {
-		if(Test-ObjectExists -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']") {
-			$objExists = $True
-			$object = Get-FimObject -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']"
-		}
-	} else {
-		if(Test-ObjectExists -Value $AccountName) {
-			$objExists = $True
-			$object = Get-FimObject -Value $AccountName
-		}
+	if($Domain -ne "" -and (Test-ObjectExists -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']")) {
+		$objExists = $True
+		$object = Get-FimObject -Filter "/Person[AccountName='$AccountName' and Domain='$Domain']"
+	} elseif(Test-ObjectExists -Value $AccountName) {
+		$objExists = $True
+		$object = Get-FimObject -Value $AccountName
 	}
 	if($objExists) {
 		Write-Host " -Reading account information"
@@ -63,7 +59,7 @@ Function Set-ObjectSid
 		Write-Host " -Writing Account information ObjectSID = $accountSid"
 		New-FimImportObject -ObjectType Person -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	} else {
-		Throw "Cannot find an account by that name"
+		Throw "Cannot find an account with name '$AccountName' and domain '$Domain' or multiple matches found."
 	}
 }
 
@@ -421,6 +417,7 @@ Function Test-ObjectExists
 
 	.DESCRIPTION
 	Check if a given object exists in the FIM portal.
+	Returns false if no or multiple matches are found.
 
 	.EXAMPLE
 	Test-ObjectExists -Value is4u.admin -Attribute AccountName -ObjectType Person	
@@ -442,12 +439,16 @@ Function Test-ObjectExists
 		[String]
 		$Filter
 	)
-	if($Filter -ne "") {
-		$obj = Export-FIMConfig -CustomConfig $Filter -OnlyBaseResources
-	} elseif($Value -ne "") {
-		$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
-	} else {
+	$searchFilter = $Filter
+	if($Value -ne "") {
+		$searchFilter = "/$ObjectType[$Attribute='$Value']"
+	}
+	if($searchFilter -eq "") {
 		Throw "No search criteria specified"
+	}
+	$obj = Export-FIMConfig -CustomConfig $searchFilter -OnlyBaseResources
+	if($obj.GetType().Name -ne "ExportObject") {
+		Throw "Multiple matches found for filter '$searchFilter'"
 	}
 	$exists = $obj -ne $null
 	return $exists
@@ -488,14 +489,18 @@ Function Get-FimObject
 		[String]
 		$Filter
 	)
-	if($Filter -ne "") {
-		$obj = Export-FIMConfig -CustomConfig $Filter -OnlyBaseResources | Convert-FimExportToPSObject
-	} elseif($Value -ne "") {
-		$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
-	} else {
+	$searchFilter = $Filter
+	if($Value -ne "") {
+		$searchFilter = "/$ObjectType[$Attribute='$Value']"
+	}
+	if($searchFilter -eq "") {
 		Throw "No search criteria specified"
 	}
-	return $obj
+	$obj = Export-FIMConfig -CustomConfig $searchFilter -OnlyBaseResources
+	if($obj.GetType().Name -ne "ExportObject") {
+		Throw "Multiple matches found for filter '$searchFilter'"
+	}
+	return (Convert-FimExportToPSObject $obj)
 }
 
 Function Add-AttributeToMPR
