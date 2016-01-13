@@ -199,8 +199,8 @@ Function Update-Mpr
 		[UniqueIdentifier]
 		$ActionWfId,
 
-        [Parameter(Mandatory=$True)]
-        [UniqueIdentifier]
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
 		$PrincipalSetId,
 		
 		[Parameter(Mandatory=$True)]
@@ -392,7 +392,7 @@ Function Test-ObjectExists
 		[String]
 		$ObjectType = "Person"	
 	)
-    $obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
+	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources
 	$exists = $obj -ne $null
 	return $exists
 }
@@ -428,7 +428,7 @@ Function Get-FimObject
 		[String]
 		$ObjectType = "Person"	
 	)
-    $obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
+	$obj = Export-FIMConfig -CustomConfig "/$ObjectType[$Attribute='$Value']" -OnlyBaseResources | Convert-FimExportToPSObject
 	return $obj
 }
 
@@ -453,9 +453,9 @@ Function Add-AttributeToMPR
 		[String]
 		$MprName
 	)
-    $anchor = @{'DisplayName' = $MprName}
-    $changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-    New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$anchor = @{'DisplayName' = $MprName}
+	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
 Function Remove-AttributeFromMPR
@@ -479,9 +479,9 @@ Function Remove-AttributeFromMPR
 		[String]
 		$MprName
 	)
-    $anchor = @{'DisplayName' = $MprName}
-    $changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-    New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$anchor = @{'DisplayName' = $MprName}
+	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
 Function Add-ObjectToSynchronizationFilter

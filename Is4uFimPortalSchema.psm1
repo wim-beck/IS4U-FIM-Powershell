@@ -46,12 +46,12 @@ Function New-Attribute
 		[String]
 		$MultiValued
 	)
-    $changes = @{}
-    $changes.Add("DisplayName", $DisplayName)
-    $changes.Add("Name", $Name)
-    $changes.Add("DataType", $Type)
-    $changes.Add("Multivalued", $MultiValued)
-    New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Name", $Name)
+	$changes.Add("DataType", $Type)
+	$changes.Add("Multivalued", $MultiValued)
+	New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
 	return $id
 }
@@ -74,7 +74,7 @@ Function Remove-Attribute
 		$Name
 	)
 	$anchor = @{"Name"=$Name}
-    New-FimImportObject -ObjectType AttributeTypeDescription -State Delete -AnchorPairs $anchor -ApplyNow
+	New-FimImportObject -ObjectType AttributeTypeDescription -State Delete -AnchorPairs $anchor -ApplyNow
 }
 
 Function New-AttributeBinding
@@ -129,8 +129,8 @@ Function Remove-AttributeBinding
 		$Name
 	)
 	$attr = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name
-    $anchor = @{"BoundAttributeType"=$attr}
-    New-FimImportObject -ObjectType BindingDescription -State Delete -AnchorPairs $anchor -ApplyNow
+	$anchor = @{"BoundAttributeType"=$attr}
+	New-FimImportObject -ObjectType BindingDescription -State Delete -AnchorPairs $anchor -ApplyNow
 }
 
 Function New-AttributeAndBinding {
@@ -253,11 +253,11 @@ Function New-ObjectType
 		[String]
 		$Description
 	)
-    $changes = @{}
-    $changes.Add("DisplayName", $DisplayName)
-    $changes.Add("Name", $Name)
-    $changes.Add("Description", $Description)
-    New-FimImportObject -ObjectType ObjectTypeDescription -State Create -Changes $changes -ApplyNow
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Name", $Name)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType ObjectTypeDescription -State Create -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name
 	return $id
 }
@@ -288,10 +288,10 @@ Function Update-ObjectType
 		$Description
 	)
 	$anchor = @{'Name' = $name}
-    $changes = @{}
-    $changes.Add("DisplayName", $DisplayName)
-    $changes.Add("Description", $Description)
-    New-FimImportObject -ObjectType ObjectTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType ObjectTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name
 	return $id
 }
