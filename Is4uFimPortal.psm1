@@ -21,6 +21,39 @@ if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
 Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
+Function Remove-ObjectsFromPortal
+{
+<#
+	.SYNOPSIS
+	Removes all objects of a certain type from the FIM Portal.
+
+	.DESCRIPTION
+	Removes all objects of a certain type from the FIM Portal.
+
+	.EXAMPLE
+	Remove-ObjectsFromPortal -ObjectType "Person"
+#>
+	param(
+		[Parameter(Mandatory=$False)]
+		[String]
+		$ObjectType="Person"
+	)
+	$specialUsers = ("fb89aefa-5ea1-47f1-8890-abe7797d6497","7fb2b853-24f0-4498-9534-4e10589723c4")
+	Write-Host "Start exporting objects.."
+	$objects = Export-FIMConfig -OnlyBaseResources -CustomConfig "/$ObjectType" -OnlyBaseResources
+	Write-Host "Start deleting objects.."
+	foreach($entry in $objects) {
+		$user = Convert-FimExportToPSObject $entry
+		$objId = $user.ObjectID.split(':')[2]
+		if($specialUsers.Contains($objId)) {
+			Write-Host "Do not delete account with id '$objId'"
+		} else {
+			$anchor = @{'ObjectID' = $objId}
+			New-FimImportObject -ObjectType $ObjectType -State Delete -Anchor $anchor -ApplyNow
+		}
+	}
+}
+
 Function Enable-PortalAccess
 {
 <#
