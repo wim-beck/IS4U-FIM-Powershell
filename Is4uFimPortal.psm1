@@ -40,7 +40,7 @@ Function Remove-ObjectsFromPortal
 	)
 	$specialUsers = ("fb89aefa-5ea1-47f1-8890-abe7797d6497","7fb2b853-24f0-4498-9534-4e10589723c4")
 	Write-Host "Start exporting objects.."
-	$objects = Export-FIMConfig -OnlyBaseResources -CustomConfig "/$ObjectType" -OnlyBaseResources
+	$objects = Export-FIMConfig -CustomConfig "/$ObjectType" -OnlyBaseResources
 	Write-Host "Start deleting objects.."
 	foreach($entry in $objects) {
 		$user = Convert-FimExportToPSObject $entry
@@ -71,13 +71,13 @@ Function Set-ObjectSid
 {
 <#
 	.SYNOPSIS
-	Add an object to the explicit members of a set.
+	Set the object sid of a given FIM portal user to the correct value.
 
 	.DESCRIPTION
-	Add an object to the explicit members of a set.
+	Set the object sid of a given FIM portal user to the correct value.
 
 	.EXAMPLE
-	Add-ObjectToSet -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+	Set-ObjectSid -AccountName mim.installer -Domain IS4U
 #>
 	param(
 		[Parameter(Mandatory=$True)]
