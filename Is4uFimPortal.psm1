@@ -34,7 +34,7 @@ Function Remove-ObjectsFromPortal
 	Remove-ObjectsFromPortal -ObjectType "Person"
 #>
 	param(
-		[Parameter(Mandatory=$False)]
+		[Parameter(Mandatory=$False)] 
 		[String]
 		$ObjectType="Person"
 	)
@@ -637,20 +637,31 @@ Function Add-AttributeToFilterScope
 	Adds an attribute to the filter scope.
 
 	.EXAMPLE
-	[UniqueIdentifier] $attrId = New-Attribute -Name TestAttribute -DisplayName "Test Attribute" -Type String
-	Add-AttributeToFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
+	Add-AttributeToFilterScope -AttributeName Visa -DisplayName "Administrator Filter Permission"
 #>
 	param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
+		[String]
+		$AttributeName,
+
+		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$Attribute,
+		$AttributeId,
 
 		[Parameter(Mandatory=$False)]
 		[String]
 		$DisplayName = "Administrator Filter Permission"
 	)
+	if($AttributeId -eq $null) {
+		$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	} else {
+		$attrId = $AttributeId
+	}
+	if($attrId -eq "") {
+		Throw "No attribute specified"
+	}
 	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'AllowedAttributes' -AttributeValue $Attribute.ToString())
+	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'AllowedAttributes' -AttributeValue $attrId)
 	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
@@ -664,20 +675,31 @@ Function Remove-AttributeFromFilterScope
 	Removes an attribute from the filter scope.
 
 	.EXAMPLE
-	[UniqueIdentifier] $attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue TestAttribute
-	Remove-AttributeFromFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
+	Remove-AttributeFromFilterScope -AttributeName Visa -DisplayName "Administrator Filter Permission"
 #>
 	param(
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
+		[String]
+		$AttributeName,
+
+		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$Attribute,
+		$AttributeId,
 
 		[Parameter(Mandatory=$False)]
 		[String]
 		$DisplayName = "Administrator Filter Permission"
 	)
+	if($AttributeId -eq $null) {
+		$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	} else {
+		$attrId = $AttributeId
+	}
+	if($attrId -eq "") {
+		Throw "No attribute specified"
+	}
 	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'AllowedAttributes' -AttributeValue $Attribute.ToString())
+	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'AllowedAttributes' -AttributeValue $attrId)
 	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 

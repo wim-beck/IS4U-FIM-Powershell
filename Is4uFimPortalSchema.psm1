@@ -37,21 +37,60 @@ Function New-Attribute
 		[String]
 		$DisplayName,
 
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description,
+
 		[Parameter(Mandatory=$True)]
 		[String]
 		[ValidateScript({("String", "DateTime", "Integer", "Reference", "Boolean", "Text", "Binary") -contains $_})]
 		$Type,
 
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
 		[String]
-		$MultiValued
+		$MultiValued = "False"
 	)
 	$changes = @{}
 	$changes.Add("DisplayName", $DisplayName)
 	$changes.Add("Name", $Name)
+	$changes.Add("Description", $Description)
 	$changes.Add("DataType", $Type)
 	$changes.Add("Multivalued", $MultiValued)
 	New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow
+	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	return $id
+}
+
+Function Update-Attribute
+{
+<#
+	.SYNOPSIS
+	Update an attribute in the FIM Portal schema.
+
+	.DESCRIPTION
+	Update an attribute in the FIM Portal schema.
+
+	.EXAMPLE
+	Update-Attribute -Name Visa -DisplayName Visa -Description "Visa card number"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Name,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description
+	)
+	$anchor = @{'Name' = $Name}
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType AttributeTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
 	return $id
 }
@@ -66,7 +105,7 @@ Function Remove-Attribute
 	Remove an attribute from the FIM Portal schema.
 
 	.EXAMPLE
-	Remove-Attribute -AttrName Visa
+	Remove-Attribute -Name Visa
 #>
 	param(
 		[Parameter(Mandatory=$True)]
@@ -77,7 +116,7 @@ Function Remove-Attribute
 	New-FimImportObject -ObjectType AttributeTypeDescription -State Delete -AnchorPairs $anchor -ApplyNow
 }
 
-Function New-AttributeBinding
+Function New-Binding
 {
 <#
 	.SYNOPSIS
@@ -87,12 +126,15 @@ Function New-AttributeBinding
 	Create a new attribute binding in the FIM Portal schema.
 
 	.EXAMPLE
-	New-AttributeBinding -AttrName Visa -DisplayName "Visa Card Number" -ObjectType Person
+	New-Binding -AttributeName Visa -DisplayName "Visa Card Number"
+
+	.EXAMPLE
+	New-Binding -AttributeName Visa -DisplayName "Visa Card Number" -Required $False -ObjectType Person
 #>
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$AttrName, 
+		$AttributeName,
 	
 		[Parameter(Mandatory=$True)]
 		[String]
@@ -100,18 +142,23 @@ Function New-AttributeBinding
 	
 		[Parameter(Mandatory=$False)]
 		[String]
+		$Required = "False",
+
+		[Parameter(Mandatory=$False)]
+		[String]
 		$ObjectType = "Person"
 	)
-	$attr = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttrName
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
 	$changes = @{}
-	$changes.Add("Required", $false)
+	$changes.Add("Required", $Required)
 	$changes.Add("DisplayName", $DisplayName)
-	$changes.Add("BoundAttributeType", $attr)
-	$changes.Add("BoundObjectType", $ObjectType)
+	$changes.Add("BoundAttributeType", $attrId)
+	$changes.Add("BoundObjectType", $objId)
 	New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow
 }
 
-Function Remove-AttributeBinding
+Function Remove-Binding
 {
 <#
 	.SYNOPSIS
@@ -121,15 +168,22 @@ Function Remove-AttributeBinding
 	Remove an attribute binding from the FIM Portal schema.
 
 	.EXAMPLE
-	Remove-AttributeBinding -AttrName Visa
+	Remove-Binding -AttributeName Visa
 #>
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$Name
+		$AttributeName,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$ObjectType = "Person"
 	)
-	$attr = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name
-	$anchor = @{"BoundAttributeType"=$attr}
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
+	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
+	[UniqueIdentifier] $id = $binding.ObjectID
+	$anchor = @{"ObjectID" = $id.Value}
 	New-FimImportObject -ObjectType BindingDescription -State Delete -AnchorPairs $anchor -ApplyNow
 }
 
@@ -168,13 +222,12 @@ Function New-AttributeAndBinding {
 	)
 
 	[UniqueIdentifier] $attrId = New-Attribute -Name $Name -DisplayName $DisplayName -Type $Type -MultiValued $MultiValued
-	$obj = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
-	New-AttributeBinding -AttrName $Name -DisplayName $DisplayName -ObjectType $obj
+	New-Binding -AttributeName $Name -DisplayName $DisplayName -ObjectType $ObjectType
 	if($ObjectType -eq "Person"){
 		Add-AttributeToMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Add-AttributeToMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
 	}
-	Add-AttributeToFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
+	Add-AttributeToFilterScope -AttributeId $attrId -DisplayName "Administrator Filter Permission"
 }
 
 Function Remove-AttributeAndBinding {
@@ -201,9 +254,9 @@ Function Remove-AttributeAndBinding {
 		Remove-AttributeFromMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Remove-AttributeFromMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
 	}
-	Remove-AttributeFromFilterScope -Attribute $attrId -DisplayName "Administrator Filter Permission"
-	Remove-AttributeBinding $Name
-	Remove-Attribute $Name
+	Remove-AttributeFromFilterScope -AttributeName $Name -DisplayName "Administrator Filter Permission"
+	Remove-Binding -AttributeName $Name -ObjectType $ObjectType
+	Remove-Attribute -AttributeName $Name
 }
 
 Function Import-SchemaExtensions {
