@@ -21,6 +21,70 @@ if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
 Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
+Function Get-DynamicGroupFilter
+{
+<#
+	.SYNOPSIS
+	Get a report from the filters of dynamic groups in FIM.
+
+	.DESCRIPTION
+	Get a report from the filters of dynamic groups in FIM.
+
+	.EXAMPLE
+	Get-DynamicGroupFilter
+#>
+	param( 
+		[Parameter(Mandatory=$False)] 
+		[String]
+		$OutputFile = "groupFilters.csv"
+	)
+	Write-Output "Name;Object;Attribute;Operation;Value;Filter" | Out-File $OutputFile
+	Add-TypeAccelerators -AssemblyName System.Xml.Linq -Class XAttribute
+	$groups = Export-FIMConfig -CustomConfig "/Group[MembershipLocked='true']" -OnlyBaseResources
+	foreach($g in $groups) {
+		$group = Convert-FimExportToPSObject $g
+		[XElement] $filter = New-Object XElement($group.Filter)
+		if($filter.Value -match "\/(.+)\[(.+)\]") {
+			$name = $group.DisplayName
+			$obj = $Matches[1]
+			$criteria = $Matches[2]
+			Write-Output "$name;$obj;;;;$criteria" | Out-File $OutputFile -Append
+			if($criteria -match "(^|\s)\((\w+) = '(\w+)'\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;is;$val;$criteria" | Out-File $OutputFile -Append
+			}
+			if($criteria -match "(^|\s)\(not\((\w+) = '(\w+)'\)\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;is not;$val;$criteria" | Out-File $OutputFile -Append
+			}
+			if($criteria -match "(^|\s)\(starts-with\((\w+), '(\w+)'\)\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;starts with;$val;$criteria" | Out-File $OutputFile -Append
+			}
+			if($criteria -match "(^|\s)\(not\(starts-with\((\w+), '(\w+)'\)\)\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;starts not with;$val;$criteria" | Out-File $OutputFile -Append
+			}
+			if($criteria -match "(^|\s)\(ends-with\((\w+), '(\w+)'\)\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;ends with;$val;$criteria" | Out-File $OutputFile -Append
+			}
+			if($criteria -match "(^|\s)\(not\(ends-with\((\w+), '(\w+)'\)\)\)($|\s)") {
+				$attr = $Matches[2]
+				$val = $Matches[3]
+				Write-Output "$name;$obj;$attr;ends not with;$val;$criteria" | Out-File $OutputFile -Append
+			}
+		} else {
+			Write-Host "Filter did not match for group" $group.DisplayName
+		}
+	}
+}
+
 Function Remove-ObjectsFromPortal
 {
 <#
