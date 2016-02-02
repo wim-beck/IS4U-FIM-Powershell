@@ -49,32 +49,32 @@ Function Get-DynamicGroupFilter
 			$obj = $Matches[1]
 			$criteria = $Matches[2]
 			Write-Output "$name;$obj;;;;$criteria" | Out-File $OutputFile -Append
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*(\w+) = '([\w\s\+]+)'(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*(\w+)\s*=\s*'([\w\s\+]+)'\s*(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;is;$val;$criteria" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*not\((\w+) = '([\w\s\+]+)'\)(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(\s*(\w+)\s*=\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;is not;$val;$criteria" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*starts-with\((\w+), '([\w\s\+]+)'\)(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*starts-with\((\w+),\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;starts with;$val;$criteria" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*not\(starts-with\((\w+), '([\w\s\+]+)'\)\)(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(starts-with\((\w+),\s*'([\w\s\+]+)'\s*\)\)(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;starts not with;$val;$criteria" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*ends-with\((\w+), '([\w\s\+]+)'\)(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*ends-with\((\w+),\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;ends with;$val;$criteria" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*not\(ends-with\((\w+), '([\w\s\+]+)'\)\)(?:\))*(?:$|\s|and|or|\()") {
+			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(ends-with\((\w+),\s*'([\w\s\+]+)'\s*\)\)(?:\))*(?:$|\s|and|or|\()") {
 				$attr = $Matches[1]
 				$val = $Matches[2]
 				Write-Output "$name;$obj;$attr;ends not with;$val;$criteria" | Out-File $OutputFile -Append
