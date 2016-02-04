@@ -38,6 +38,12 @@ Function Get-DynamicGroupFilter
 		[String]
 		$OutputFile = "groupFilters.csv"
 	)
+	[Regex] $is = "(?:^|\s)\((\w+) = '([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+),\s*'([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $startsNotwith = "(?:^|\s)\(not\(starts-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $endsWith = "(?:^|\s)\(ends-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $endsNotWith = "(?:^|\s)\(not\(ends-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
 	Write-Output "Name;Object;Attribute;Operation;Value;Filter" | Out-File $OutputFile
 	Add-TypeAccelerators -AssemblyName System.Xml.Linq -Class XAttribute
 	$groups = Export-FIMConfig -CustomConfig "/Group[MembershipLocked='true']" -OnlyBaseResources
@@ -47,37 +53,49 @@ Function Get-DynamicGroupFilter
 		if($filter.Value -match "\/(.+)\[(.+)\]") {
 			$name = $group.DisplayName
 			$obj = $Matches[1]
-			$criteria = $Matches[2]
-			Write-Output "$name;$obj;;;;$criteria" | Out-File $OutputFile -Append
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*(\w+)\s*=\s*'([\w\s\+]+)'\s*(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;is;$val;$criteria" | Out-File $OutputFile -Append
+			$criteria0 = $Matches[2]
+			$criteria = $criteria0 -replace "\s*\(+\s*","("
+			$criteria = $criteria -replace "\s*\)+\s*",")"
+			$criteria = $criteria -replace "\s*=\s*"," = "
+			$criteria = $criteria -replace "\s*and\s*"," and "
+			$criteria = $criteria -replace "\s*or\s*"," or "
+			$criteria = $criteria -replace "\s*,\s*",", "
+			Write-Output "$name;$obj;;;;$criteria0" | Out-File $OutputFile -Append
+			$matches = $is.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;is not;$val;$criteria0" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(\s*(\w+)\s*=\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;is not;$val;$criteria" | Out-File $OutputFile -Append
+			$matches = $isNot.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;is not;$val;$criteria0" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*starts-with\((\w+),\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;starts with;$val;$criteria" | Out-File $OutputFile -Append
+			$matches = $startsWith.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;starts with;$val;$criteria0" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(starts-with\((\w+),\s*'([\w\s\+]+)'\s*\)\)(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;starts not with;$val;$criteria" | Out-File $OutputFile -Append
+			$matches = $startsNotwith.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;starts not with;$val;$criteria0" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*ends-with\((\w+),\s*'([\w\s\+]+)'\s*\)(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;ends with;$val;$criteria" | Out-File $OutputFile -Append
+			$matches = $endsWith.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;ends with;$val;$criteria0" | Out-File $OutputFile -Append
 			}
-			if($criteria -match "(?:^|\s|and|or|\))(?:\()*\s*not\(ends-with\((\w+),\s*'([\w\s\+]+)'\s*\)\)(?:\))*(?:$|\s|and|or|\()") {
-				$attr = $Matches[1]
-				$val = $Matches[2]
-				Write-Output "$name;$obj;$attr;ends not with;$val;$criteria" | Out-File $OutputFile -Append
+			$matches = $endsNotWith.Matches($criteria);
+			foreach($match in $matches) {
+				$attr = $match.Groups[1].Value
+				$val = $match.Groups[2].Value
+				Write-Output "$name;$obj;$attr;ends not with;$val;$criteria0" | Out-File $OutputFile -Append
 			}
 		} else {
 			Write-Host "Filter did not match for group" $group.DisplayName
