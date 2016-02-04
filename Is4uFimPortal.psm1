@@ -38,12 +38,12 @@ Function Get-DynamicGroupFilter
 		[String]
 		$OutputFile = "groupFilters.csv"
 	)
-	[Regex] $is = "(?:^|\s)\((\w+) = '([\w\s\+]+)'\)(?:$|\s)"
-	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([\w\s\+]+)'\)(?:$|\s)"
-	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+),\s*'([\w\s\+]+)'\)(?:$|\s)"
-	[Regex] $startsNotwith = "(?:^|\s)\(not\(starts-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
-	[Regex] $endsWith = "(?:^|\s)\(ends-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
-	[Regex] $endsNotWith = "(?:^|\s)\(not\(ends-with\((\w+), '([\w\s\+]+)'\)(?:$|\s)"
+	[Regex] $is = "(?:^|\s)\((\w+) = '([\w\s\+&\-]+)'\)(?:$|\s)"
+	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([\w\s\+&\-]+)'\)(?:$|\s)"
+	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
+	[Regex] $startsNotwith = "(?:^|\s)\(not\(starts-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
+	[Regex] $endsWith = "(?:^|\s)\(ends-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
+	[Regex] $endsNotWith = "(?:^|\s)\(not\(ends-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
 	Write-Output "Name;Object;Attribute;Operation;Value;Filter" | Out-File $OutputFile
 	Add-TypeAccelerators -AssemblyName System.Xml.Linq -Class XAttribute
 	$groups = Export-FIMConfig -CustomConfig "/Group[MembershipLocked='true']" -OnlyBaseResources
