@@ -38,12 +38,13 @@ Function Get-DynamicGroupFilter
 		[String]
 		$OutputFile = "groupFilters.csv"
 	)
-	[Regex] $is = "(?:^|\s)\((\w+) = '([\w\s\+&\-]+)'\)(?:$|\s)"
-	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([\w\s\+&\-]+)'\)(?:$|\s)"
-	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
-	[Regex] $startsNotwith = "(?:^|\s)\(not\(starts-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
-	[Regex] $endsWith = "(?:^|\s)\(ends-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
-	[Regex] $endsNotWith = "(?:^|\s)\(not\(ends-with\((\w+), '([\w\s\+&\-]+)'\)(?:$|\s)"
+	$values = "\w\s\+&\-%\."
+	[Regex] $is = "(?:^|\s)\((\w+) = '([$values]+)'\)(?:$|\s)"
+	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([$values]+)'\)(?:$|\s)"
+	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+), '([$values]+)'\)(?:$|\s)"
+	[Regex] $startsNotwith = "(?:^|\s)\(not\(starts-with\((\w+), '([$values]+)'\)(?:$|\s)"
+	[Regex] $endsWith = "(?:^|\s)\(ends-with\((\w+), '([$values]+)'\)(?:$|\s)"
+	[Regex] $endsNotWith = "(?:^|\s)\(not\(ends-with\((\w+), '([$values]+)'\)(?:$|\s)"
 	Write-Output "Name;Object;Attribute;Operation;Value;Filter" | Out-File $OutputFile
 	Add-TypeAccelerators -AssemblyName System.Xml.Linq -Class XAttribute
 	$groups = Export-FIMConfig -CustomConfig "/Group[MembershipLocked='true']" -OnlyBaseResources
@@ -57,8 +58,8 @@ Function Get-DynamicGroupFilter
 			$criteria = $criteria0 -replace "\s*\(+\s*","("
 			$criteria = $criteria -replace "\s*\)+\s*",")"
 			$criteria = $criteria -replace "\s*=\s*"," = "
-			$criteria = $criteria -replace "\s*and\s*"," and "
-			$criteria = $criteria -replace "\s*or\s*"," or "
+			$criteria = $criteria -replace "\)\s*and\s*\(",") and ("
+			$criteria = $criteria -replace "\)\s*or\s*\(",") or ("
 			$criteria = $criteria -replace "\s*,\s*",", "
 			Write-Output "$name;$obj;;;;$criteria0" | Out-File $OutputFile -Append
 			$matches = $is.Matches($criteria);
