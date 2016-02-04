@@ -65,37 +65,37 @@ Function Get-DynamicGroupFilter
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;is;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;is;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $isNot.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;is not;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;is not;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;starts with;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;starts with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsNotwith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;starts not with;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;starts not with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;ends with;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;ends with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsNotWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;ends not with;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;ends not with;$val;" | Out-File $OutputFile -Append
 			}
 		} else {
 			Write-Host "Filter did not match for group" $group.DisplayName
