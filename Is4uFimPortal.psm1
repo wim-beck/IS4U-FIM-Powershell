@@ -38,7 +38,7 @@ Function Get-DynamicGroupFilter
 		[String]
 		$OutputFile = "groupFilters.csv"
 	)
-	$values = "\w\s\+&\-%\."
+	$values = "\w\s\+&\-%\.,"
 	[Regex] $is = "(?:^|\s)\((\w+) = '([$values]+)'\)(?:$|\s)"
 	[Regex] $isNot = "(?:^|\s)\(not\((\w+) = '([$values]+)'\)(?:$|\s)"
 	[Regex] $startsWith = "(?:^|\s)\(starts-with\((\w+), '([$values]+)'\)(?:$|\s)"
