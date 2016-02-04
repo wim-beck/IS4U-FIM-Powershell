@@ -65,7 +65,7 @@ Function Get-DynamicGroupFilter
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;is not;$val;$criteria0" | Out-File $OutputFile -Append
+				Write-Output "$name;$obj;$attr;is;$val;$criteria0" | Out-File $OutputFile -Append
 			}
 			$matches = $isNot.Matches($criteria);
 			foreach($match in $matches) {
