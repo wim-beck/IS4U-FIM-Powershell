@@ -988,7 +988,7 @@ Function Update-SearchScope {
 		[Array]
 		$UsageKeyWords
 	)
-	$anchor = @{'DisplayName' = $displayName}
+	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScope' -AttributeValue "/$ObjectType"
@@ -1001,6 +1001,22 @@ Function Update-SearchScope {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType SearchScopeConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-SearchScope {
+<#
+	.SYNOPSIS
+	Remove a search scope.
+
+	.DESCRIPTION
+	Remove a search scope.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName
+	)
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType SearchScopeConfiguration
 }
 
 Function New-NavigationBar {
@@ -1073,9 +1089,8 @@ Function Update-NavigationBar {
 		[Array]
 		$UsageKeyWords
 	)
-	$anchor = @{'DisplayName' = $displayName}
+	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'NavigationUrl' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ParentOrder' -AttributeValue $ParentOrder
@@ -1084,4 +1099,20 @@ Function Update-NavigationBar {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType NavigationBarConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-NavigationBar {
+<#
+	.SYNOPSIS
+	Remove a navigation bar.
+
+	.DESCRIPTION
+	Remove a navigation bar.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName
+	)
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType NavigationBarConfiguration
 }
