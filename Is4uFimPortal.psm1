@@ -292,20 +292,12 @@ Function New-Mpr {
 		$DisplayName,
 
 		[Parameter(Mandatory=$True)]
-		[UniqueIdentifier]
-		$ActionWfId,
-
-        [Parameter(Mandatory=$True)]
         [UniqueIdentifier]
 		$PrincipalSetId,
 		
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
 		$SetId,
-		
-		[Parameter(Mandatory=$True)]
-		[UniqueIdentifier]
-		$AuthWfId,
 		
 		[Parameter(Mandatory=$True)]
 		[Array]
@@ -316,7 +308,8 @@ Function New-Mpr {
 		$ActionParameter,
 		
 		[Parameter(Mandatory=$True)]
-		[Boolean]
+		[String]
+		[ValidateScript({("True", "False") -contains $_})]
 		$GrantRight,
 		
 		[Parameter(Mandatory=$True)]
@@ -324,11 +317,25 @@ Function New-Mpr {
 		$ManagementPolicyRuleType,
 		
 		[Parameter(Mandatory=$False)]
-		[Boolean]
-		$Disabled = $False
+		[UniqueIdentifier]
+		$AuthWfId,
+
+		[Parameter(Mandatory=$False)]
+		[UniqueIdentifier]
+		$ActionWfId,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		[ValidateScript({("True", "False") -contains $_})]
+		$Disabled = "False",
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description
 	)
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Description' -AttributeValue $Description
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
 	foreach($param in $ActionParameter) {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
@@ -336,13 +343,17 @@ Function New-Mpr {
 	foreach($action in $ActionType) {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
 	}
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ManagementPolicyRuleType' -AttributeValue $ManagementPolicyRuleType
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Disabled' -AttributeValue $Disabled
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceCurrentSet' -AttributeValue $SetId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceFinalSet' -AttributeValue $SetId.ToString()
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
+	if($ActionWfId -ne $null) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
+	}
+	if($AuthWfId -ne $null) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
+	}
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Create -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
 	return $id
@@ -363,19 +374,11 @@ Function Update-Mpr {
 
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
-		$ActionWfId,
-
-		[Parameter(Mandatory=$True)]
-		[UniqueIdentifier]
 		$PrincipalSetId,
 		
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
 		$SetId,
-		
-		[Parameter(Mandatory=$True)]
-		[UniqueIdentifier]
-		$AuthWfId,
 
 		[Parameter(Mandatory=$True)]
 		[Array]
@@ -386,15 +389,30 @@ Function Update-Mpr {
 		$ActionParameter,
 		
 		[Parameter(Mandatory=$True)]
-		[Boolean]
+		[String]
+		[ValidateScript({("True", "False") -contains $_})]
 		$GrantRight,
 		
 		[Parameter(Mandatory=$False)]
-		[Boolean]
-		$Disabled = $False
+		[UniqueIdentifier]
+		$AuthWfId,
+
+		[Parameter(Mandatory=$False)]
+		[UniqueIdentifier]
+		$ActionWfId,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		[ValidateScript({("True", "False") -contains $_})]
+		$Disabled = "False",
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description
 	)
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Description' -AttributeValue $Description
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
 	foreach($param in $ActionParameter) {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
@@ -402,12 +420,16 @@ Function Update-Mpr {
 	foreach($action in $ActionType) {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
 	}
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Disabled' -AttributeValue $Disabled
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceCurrentSet' -AttributeValue $SetId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceFinalSet' -AttributeValue $SetId.ToString()
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
+	if($ActionWfId -ne $null) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
+	}
+	if($AuthWfId -ne $null) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
+	}
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
 	return $id
@@ -802,4 +824,191 @@ Function Remove-FimObject {
 	)
 	$anchor = @{$AnchorName = $AnchorValue}
 	New-FimImportObject -ObjectType $ObjectType -State Delete -Anchor $anchor -ApplyNow
+}
+
+Function New-SearchScope {
+<#
+	.SYNOPSIS
+	Create a new search scope.
+
+	.DESCRIPTION
+	Create a new search scope.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Order,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ObjectType,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttributeName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Context,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Column,
+
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$UsageKeyWords
+	)
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScope' -AttributeValue "/$ObjectType"
+	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'SearchScopeContext' -AttributeValue $Context
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeColumn' -AttributeValue $Column
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeResultObjectType' -AttributeValue $ObjectType
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeTargetURL' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'IsConfigurationType' -AttributeValue $True
+	foreach($keyword in $UsageKeyWords){
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
+	}
+	New-FimImportObject -ObjectType SearchScopeConfiguration -State Create -Changes $changes -ApplyNow
+}
+
+Function Update-SearchScope {
+<#
+	.SYNOPSIS
+	Update a search scope.
+
+	.DESCRIPTION
+	Update a search scope.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Order,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ObjectType,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttributeName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Context,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Column,
+
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$UsageKeyWords
+	)
+	$anchor = @{'DisplayName' = $displayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScope' -AttributeValue "/$ObjectType"
+	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'SearchScopeContext' -AttributeValue $Context
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeColumn' -AttributeValue $Column
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeResultObjectType' -AttributeValue $ObjectType
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'SearchScopeTargetURL' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'IsConfigurationType' -AttributeValue $True
+	foreach($keyword in $UsageKeyWords){
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
+	}
+	New-FimImportObject -ObjectType SearchScopeConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function New-NavigationBar {
+<#
+	.SYNOPSIS
+	Create a new navigation bar.
+
+	.DESCRIPTION
+	Create a new navigation bar.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Order,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ParentOrder,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ObjectType,
+
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$UsageKeyWords
+	)
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'NavigationUrl' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ParentOrder' -AttributeValue $ParentOrder
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'IsConfigurationType' -AttributeValue $True
+	foreach($keyword in $UsageKeyWords) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
+	}
+	New-FimImportObject -ObjectType NavigationBarConfiguration -State Create -Changes $changes -ApplyNow
+}
+
+Function Update-NavigationBar {
+<#
+	.SYNOPSIS
+	Update a navigation bar.
+
+	.DESCRIPTION
+	Update a navigation bar.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Order,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ParentOrder,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ObjectType,
+
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$UsageKeyWords
+	)
+	$anchor = @{'DisplayName' = $displayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'NavigationUrl' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ParentOrder' -AttributeValue $ParentOrder
+	$changes += New-FimImportChange -Operation 'None' -AttributeName 'IsConfigurationType' -AttributeValue $True
+	foreach($keyword in $UsageKeyWords) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
+	}
+	New-FimImportObject -ObjectType NavigationBarConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }

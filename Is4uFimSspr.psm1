@@ -118,10 +118,10 @@ Function Install-LocalizedSspr {
 		$mprExists = Test-ObjectExists -Value $mprName -Attribute DisplayName -ObjectType ManagementPolicyRule
 		if($mprExists){
 			Write-Host "Update existing MPR '$mprName'"
-			$mprId = Update-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId -ActionType Modify -ActionParameter ResetPassword -GrantRight $True
+			$mprId = Update-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId -ActionType Modify -ActionParameter ResetPassword -GrantRight True
 		} else {
 			Write-Host "Create MPR '$mprName'"
-			$mprId = New-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId -ActionType Modify -ActionParameter ResetPassword -GrantRight $True -ManagementPolicyRuleType Request
+			$mprId = New-Mpr -DisplayName $mprName -ActionWfId $actionWfId -PrincipalSetId $principalSetId -SetId $setId -AuthWfId $wfId -ActionType Modify -ActionParameter ResetPassword -GrantRight True -ManagementPolicyRuleType Request
 		}
 		
 		Add-ObjectToSet "Password Reset Objects Set" $setId

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Config>
+	<Object SystemName="Department" DisplayName="Department">
+		<Description>Department Resource</Description>
+		<Set DisplayName="All Departments" Description="Set of Department Resources" />
+		<Policy>
+			<MPR Type="Request" GrantRight="True" Disabled="False">
+				<DisplayName>AA Departments</DisplayName>
+				<Description>AA Departments</Description>
+				<Requestors>Administrators</Requestors>
+				<Operations>
+					<Operation>Create</Operation>
+					<Operation>Delete</Operation>
+					<Operation>Modify</Operation>
+				</Operations>
+				<Attributes>
+					<Attribute>Description</Attribute>
+					<Attribute>DisplayName</Attribute>
+					<Attribute>MVObjectID</Attribute>
+					<Attribute>ObjectType</Attribute>
+				</Attributes>
+			</MPR>
+			<MPR Type="Request" GrantRight="True" Disabled="False">
+				<DisplayName>AA Sync Departments</DisplayName>
+				<Description>AA Sync Departments</Description>
+				<Requestors>Synchronization Engine</Requestors>
+				<Operations>
+					<Operation>Create</Operation>
+					<Operation>Delete</Operation>
+					<Operation>Modify</Operation>
+				</Operations>
+				<Attributes>
+					<Attribute>Description</Attribute>
+					<Attribute>DisplayName</Attribute>
+					<Attribute>MVObjectID</Attribute>
+					<Attribute>ObjectType</Attribute>
+				</Attributes>
+			</MPR>
+		</Policy>
+		<Attribute SystemName="DepartmentReference" DisplayName="DepartmentReference" Description="Reference to Department Resource">
+			<Multivalued>False</Multivalued>
+			<Bindings>
+				<Binding Object="Person" DisplayName="DepartmentReference" Required="False" />
+			</Bindings>
+			<Policy>
+				<MPR>
+					<DisplayName>Synchronization: Synchronization account controls users it synchronizes</DisplayName>
+				</MPR>
+				<MPR>
+					<DisplayName>Administration: Administrators can read and update Users</DisplayName>
+				</MPR>
+			</Policy>
+			<RCDCs>
+				<RCDC DisplayName="Configuration for User Editing">
+					<Grouping>BasicInfo</Grouping>
+					<Caption>General</Caption>
+					<Object>Person</Object>
+				</RCDC>
+			</RCDCs>
+		</Attribute>
+		<SearchScope DisplayName="All Departments" Order="100">
+			<Context>DisplayName</Context>
+			<Column>DisplayName;Description</Column>
+			<UsageKeywords>
+				<UsageKeyword>BasicUI</UsageKeyword>
+				<UsageKeyword>Global</UsageKeyword>
+				<UsageKeyword>customized</UsageKeyword>
+				<UsageKeyword>Department</UsageKeyword>
+			</UsageKeywords>
+		</SearchScope>
+		<NavigationBarResource DisplayName="Departments" ParentOrder="7" Order="0">
+			<UsageKeywords>
+				<UsageKeyword>BasicUI</UsageKeyword>
+				<UsageKeyword>Department</UsageKeyword>
+			</UsageKeywords>
+		</NavigationBarResource>
+	</Object>
+</Config>
