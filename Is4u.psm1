@@ -73,3 +73,30 @@ Function Install-DllInGac {
 	$publish = New-Object System.EnterpriseServices.Internal.Publish
 	$publish.GacInstall((Join-Path $pwd $Dll))
 }
+
+Function Test-Port {
+<#
+	.SYNOPSIS
+	Test if a given port is open for connections on a server.
+
+	.DESCRIPTION
+	Test if a given port is open for connections on a server.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Server,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Port
+	)
+    $socket = New-Object Net.Sockets.TcpClient
+    Try {
+        $socket.Connect($Server, $Port)
+        Write-Host -ForegroundColor Green "`tPort $Port is open on $Server."
+	    $socket.Close()
+    } Catch [System.Exception] {
+        Write-Host -ForegroundColor Red "`tPort $Port is not open on $Server."
+    }
+}
