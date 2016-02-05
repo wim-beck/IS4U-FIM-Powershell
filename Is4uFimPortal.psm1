@@ -65,37 +65,37 @@ Function Get-DynamicGroupFilter {
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;is;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;is;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $isNot.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;is not;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;is not;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;starts with;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;starts with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsNotwith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;starts not with;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;starts not with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;ends with;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;ends with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsNotWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output "$name;$obj;$attr;ends not with;$val;" | Out-File $OutputFile -Append
+				Write-Output ";;$attr;ends not with;$val;" | Out-File $OutputFile -Append
 			}
 		} else {
 			Write-Host "Filter did not match for group" $group.DisplayName
@@ -307,21 +307,21 @@ Function New-Mpr {
 		[UniqueIdentifier]
 		$AuthWfId,
 		
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ActionType = "Modify",
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$ActionType,
 
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ActionParameter = "ResetPassword",
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$ActionParameter,
 		
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ManagementPolicyRuleType = "Request",
-
-		[Parameter(Mandatory=$False)]
+		[Parameter(Mandatory=$True)]
 		[Boolean]
-		$GrantRight = $True,
+		$GrantRight,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ManagementPolicyRuleType,
 		
 		[Parameter(Mandatory=$False)]
 		[Boolean]
@@ -330,8 +330,12 @@ Function New-Mpr {
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $ActionParameter
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $ActionType
+	foreach($param in $ActionParameter) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
+	}
+	foreach($action in $ActionType) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
+	}
 	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ManagementPolicyRuleType' -AttributeValue $ManagementPolicyRuleType
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
@@ -373,17 +377,17 @@ Function Update-Mpr {
 		[UniqueIdentifier]
 		$AuthWfId,
 
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ActionType = "Modify",
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$ActionType,
 
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ActionParameter = "ResetPassword",
+		[Parameter(Mandatory=$True)]
+		[Array]
+		$ActionParameter,
 		
-		[Parameter(Mandatory=$False)]
+		[Parameter(Mandatory=$True)]
 		[Boolean]
-		$GrantRight = $True,
+		$GrantRight,
 		
 		[Parameter(Mandatory=$False)]
 		[Boolean]
@@ -392,8 +396,12 @@ Function Update-Mpr {
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $ActionParameter
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $ActionType
+	foreach($param in $ActionParameter) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
+	}
+	foreach($action in $ActionType) {
+		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
+	}
 	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Disabled' -AttributeValue $Disabled
@@ -561,10 +569,13 @@ Function Test-ObjectExists {
 		Throw "No search criteria specified"
 	}
 	$obj = Export-FIMConfig -CustomConfig $searchFilter -OnlyBaseResources
-	if($obj.GetType().Name -ne "ExportObject") {
-		Throw "Multiple matches found for filter '$searchFilter'"
+	if ($obj -ne $null) {
+		if($obj.GetType().Name -ne "ExportObject") {
+			Throw "Multiple matches found for filter '$searchFilter'"
+		}
+		return $true
 	}
-	return ($obj -ne $null)
+	return $false
 }
 
 Function Get-FimObject {
