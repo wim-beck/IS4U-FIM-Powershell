@@ -16,8 +16,7 @@ here: http://opensource.org/licenses/gpl-3.0.
 Set-StrictMode -Version Latest
 Import-Module .\Is4uFimPortal.psm1
 
-Function Enable-Sspr
-{
+Function Enable-Sspr {
 <#
 	.SYNOPSIS
 	Enables all MPR's required for SSPR.
@@ -33,8 +32,7 @@ Function Enable-Sspr
 	Enable-Mpr "Administration: Administrators can read and update Users"
 }
 
-Function Disable-Sspr
-{
+Function Disable-Sspr {
 <#
 	.SYNOPSIS
 	Disables some MPR's required for SSPR.
@@ -48,8 +46,7 @@ Function Disable-Sspr
 	Disable-Mpr "General: Users can read non-administrative configuration resources"
 }
 
-Function Install-LocalizedSspr
-{
+Function Install-LocalizedSspr {
 <#
 	.SYNOPSIS
 	Installs a Q&A SSPR configuration for other languages than the default based on the configuration in

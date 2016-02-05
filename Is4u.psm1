@@ -15,8 +15,7 @@ here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
 
-Function Add-TypeAccelerators
-{
+Function Add-TypeAccelerators {
 <#
 	.SYNOPSIS
 	Add type accelerators for an assembly. Add a class name from this assembly to check
@@ -28,6 +27,12 @@ Function Add-TypeAccelerators
 
 	.EXAMPLE
 	Add-TypeAccelerators -AssemblyName System.Xml.Linq -Class XElement
+
+	.PARAMETER AssemblyName
+	Name of the assembly
+
+	.PARAMETER Class
+	Name of the class to check for existing accelerators
 #>
 	param(
 		[Parameter(Mandatory=$True)]
@@ -40,7 +45,7 @@ Function Add-TypeAccelerators
 	)
 	$typeAccelerators = [psobject].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 	$existingAccelerators = $typeAccelerators::get
-	if(! $existingAccelerators.ContainsKey($Class)){
+	if(! $existingAccelerators.ContainsKey($Class)) {
 		$assembly = [Reflection.Assembly]::LoadWithPartialName($AssemblyName)
 		$assembly.GetTypes() | ? { $_.IsPublic } | % {
 			$typeAccelerators::Add( $_.Name, $_.FullName )
@@ -48,8 +53,7 @@ Function Add-TypeAccelerators
 	}
 }
 
-Function Install-DllInGac
-{
+Function Install-DllInGac {
 <#
 	.SYNOPSIS
 	Installs the given dll in the Global Assembly Cache (C:\Windows\Assembly).

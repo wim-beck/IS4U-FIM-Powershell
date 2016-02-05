@@ -21,8 +21,7 @@ if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
 Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
-Function Get-DynamicGroupFilter
-{
+Function Get-DynamicGroupFilter {
 <#
 	.SYNOPSIS
 	Get a report from the filters of dynamic groups in FIM.
@@ -104,8 +103,7 @@ Function Get-DynamicGroupFilter
 	}
 }
 
-Function Remove-ObjectsFromPortal
-{
+Function Remove-ObjectsFromPortal {
 <#
 	.SYNOPSIS
 	Removes all objects of a certain type from the FIM Portal.
@@ -137,8 +135,7 @@ Function Remove-ObjectsFromPortal
 	}
 }
 
-Function Enable-PortalAccess
-{
+Function Enable-PortalAccess {
 <#
 	.SYNOPSIS
 	Enables all MPR's required for users to access the FIM Portal.
@@ -150,8 +147,7 @@ Function Enable-PortalAccess
 	Enable-Mpr "User management: Users can read attributes of their own"
 }
 
-Function Set-ObjectSid
-{
+Function Set-ObjectSid {
 <#
 	.SYNOPSIS
 	Set the object sid of a given FIM portal user to the correct value.
@@ -192,8 +188,7 @@ Function Set-ObjectSid
 	}
 }
 
-Function Add-ObjectToSet
-{
+Function Add-ObjectToSet {
 <#
 	.SYNOPSIS
 	Add an object to the explicit members of a set.
@@ -219,8 +214,7 @@ Function Add-ObjectToSet
 	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
 }
 
-Function New-Workflow
-{
+Function New-Workflow {
 <#
 	.SYNOPSIS
 	Create a new workflow.
@@ -255,8 +249,7 @@ Function New-Workflow
 	return $id
 }
 
-Function Update-Workflow
-{
+Function Update-Workflow {
 <#
 	.SYNOPSIS
 	Update an existing workflow.
@@ -285,8 +278,7 @@ Function Update-Workflow
 	return $id
 }
 
-Function New-Mpr
-{
+Function New-Mpr {
 <#
 	.SYNOPSIS
 	Create a new management policy rule.
@@ -352,8 +344,7 @@ Function New-Mpr
 	return $id
 }
 
-Function Update-Mpr
-{
+Function Update-Mpr {
 <#
 	.SYNOPSIS
 	Update management policy rule
@@ -414,8 +405,7 @@ Function Update-Mpr
 	return $id
 }
 
-Function New-Set
-{
+Function New-Set {
 <#
 	.SYNOPSIS
 	Create a new set.
@@ -446,8 +436,7 @@ Function New-Set
 	return $id
 }
 
-Function Update-Set
-{
+Function Update-Set {
 <#
 	.SYNOPSIS
 	Update a set.
@@ -478,8 +467,7 @@ Function Update-Set
 	return $id
 }
 
-Function Get-Filter
-{
+Function Get-Filter {
 <#
 	.SYNOPSIS
 	Constructs a filter you can use in sets and dynamic groups for the given XPath filter.
@@ -494,8 +482,7 @@ Function Get-Filter
 	return "<Filter xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' Dialect='http://schemas.microsoft.com/2006/11/XPathFilterDialect' xmlns='http://schemas.xmlsoap.org/ws/2004/09/enumeration'>{0}</Filter>" -F $XPathFilter
 }
 
-Function Enable-Mpr
-{
+Function Enable-Mpr {
 <#
 	.SYNOPSIS
 	Enables a MPR.
@@ -516,8 +503,7 @@ Function Enable-Mpr
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Disable-Mpr
-{
+Function Disable-Mpr {
 <#
 	.SYNOPSIS
 	Disables a MPR.
@@ -538,8 +524,7 @@ Function Disable-Mpr
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Test-ObjectExists
-{
+Function Test-ObjectExists {
 <#
 	.SYNOPSIS
 	Check if a given object exists in the FIM portal.
@@ -582,8 +567,7 @@ Function Test-ObjectExists
 	return ($obj -ne $null)
 }
 
-Function Get-FimObject
-{
+Function Get-FimObject {
 <#
 	.SYNOPSIS
 	Retrieve an object from the FIM portal.
@@ -631,8 +615,7 @@ Function Get-FimObject
 	return (Convert-FimExportToPSObject $obj)
 }
 
-Function Add-AttributeToMPR
-{
+Function Add-AttributeToMPR {
 <#
 	.SYNOPSIS
 	Adds an attribute to the list of selected attributes in the scope of the management policy rule.
@@ -657,8 +640,7 @@ Function Add-AttributeToMPR
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Remove-AttributeFromMPR
-{
+Function Remove-AttributeFromMPR {
 <#
 	.SYNOPSIS
 	Removes an attribute from the list of selected attributes in the scope of the management policy rule.
@@ -683,8 +665,7 @@ Function Remove-AttributeFromMPR
 	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Add-ObjectToSynchronizationFilter
-{
+Function Add-ObjectToSynchronizationFilter {
 <#
 	.SYNOPSIS
 	Adds an object type to the synchronization filter.
@@ -710,8 +691,7 @@ Function Add-ObjectToSynchronizationFilter
 	New-FimImportObject -ObjectType SynchronizationFilter -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Add-AttributeToFilterScope
-{
+Function Add-AttributeToFilterScope {
 <#
 	.SYNOPSIS
 	Adds an attribute to the filter scope.
@@ -748,8 +728,7 @@ Function Add-AttributeToFilterScope
 	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Remove-AttributeFromFilterScope
-{
+Function Remove-AttributeFromFilterScope {
 <#
 	.SYNOPSIS
 	Removes an attribute from the filter scope.
@@ -786,8 +765,7 @@ Function Remove-AttributeFromFilterScope
 	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
-Function Remove-FimObject
-{
+Function Remove-FimObject {
 <#
 	.SYNOPSIS
 	Delete an object.

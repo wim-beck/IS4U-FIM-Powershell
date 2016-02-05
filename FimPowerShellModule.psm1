@@ -1,15 +1,14 @@
-﻿Function New-FimImportObject
-{
+﻿Function New-FimImportObject {
 <#
 	.SYNOPSIS 
 	Creates a new ImportObject for the FIM Configuration Migration Cmdlets
 
 	.DESCRIPTION
-	The New-FimImportObject function makes it easier to use Import-FimConfig by providing an easier way to create ImportObject objects.
+	The New-FimImportObject Function makes it easier to use Import-FimConfig by providing an easier way to create ImportObject objects.
 	This makes it easier to perform CRUD operations in the FIM Service.
    
 	.OUTPUTS
- 	the FIM ImportObject is returned by this function.  The next logical step is take this output and feed it to Import-FimConfig.
+ 	the FIM ImportObject is returned by this Function.  The next logical step is take this output and feed it to Import-FimConfig.
    
    	.EXAMPLE
 	PS C:\$createRequest = New-FimImportObject -ObjectType Person -State Create -Changes @{
@@ -248,8 +247,7 @@
 	}
 }
 
-Function New-FimImportChange
-{
+Function New-FimImportChange {
     Param
     (                              
         [parameter(Mandatory=$true)] 
@@ -330,14 +328,13 @@ Function New-FimImportChange
     }
 }
 
-Function Skip-DuplicateCreateRequest
-{
+Function Skip-DuplicateCreateRequest {
 <#
 	.SYNOPSIS 
 	Detects a duplicate 'Create' request then removes it from the pipeline
 
 	.DESCRIPTION
-	The Skip-DuplicateCreateRequest function makes it easier to use Import-FimConfig by providing preventing a duplicate Create request.
+	The Skip-DuplicateCreateRequest Function makes it easier to use Import-FimConfig by providing preventing a duplicate Create request.
 	In most cases FIM allows the creation of duplicate objects since it mostly does not enforce uniqueness.  When loading configuration objects this can easily lead to the accidental duplication of MPRs, Sets, Workflows, etc.	
 
 	.PARAMETER ObjectType
@@ -346,7 +343,7 @@ Function Skip-DuplicateCreateRequest
 	NOTE: this is the ResourceType's 'name' attribute, which often does NOT match what is seen in the FIM Portal.
    
 	.OUTPUTS
- 	the FIM ImportObject is returned by this function ONLY if a duplicate was not fount.
+ 	the FIM ImportObject is returned by this Function ONLY if a duplicate was not fount.
    
    	.EXAMPLE
 	PS C:\$createRequest = New-FimImportObject -ObjectType Person -State Create -Changes @{
@@ -416,8 +413,7 @@ Function Skip-DuplicateCreateRequest
      }
 }
 
-Function Wait-FimRequest
-{
+Function Wait-FimRequest {
    	Param
     ( 
         [parameter(Mandatory=$true, ValueFromPipeline = $true)]
@@ -469,8 +465,7 @@ Function Wait-FimRequest
     } 
 }
 
-Function Convert-FimExportToPSObject
-{
+Function Convert-FimExportToPSObject {
     Param
     (
         [parameter(Mandatory=$true, ValueFromPipeline = $true)]
@@ -499,8 +494,7 @@ Function Convert-FimExportToPSObject
     }
 }
 
-Function Get-FimObjectID
-{
+Function Get-FimObjectID {
    	Param
     (       
         $ObjectType,
@@ -580,8 +574,7 @@ Function Get-FimObjectID
     }
 }
 
-Function Get-ObjectSid
-{
+Function Get-ObjectSid {
 <#
 	.SYNOPSIS 
 	Gets the ObjectSID as Base64 Encoded String
@@ -668,14 +661,13 @@ Function Get-ObjectSid
     }
 }
 
-function Get-FimRequestParameter
-{
+Function Get-FimRequestParameter {
 <#
 	.SYNOPSIS 
 	Gets a RequestParameter from a FIM Request into a PSObject
 
 	.DESCRIPTION
-	The Get-FimRequestParameter function makes it easier to view FIM Request Parameters by converting them from XML into PSObjects
+	The Get-FimRequestParameter Function makes it easier to view FIM Request Parameters by converting them from XML into PSObjects
 	This makes it easier view the details for reporting, and for turning a FIM Request back into a new FIM Request to repro fubars
    
 	.OUTPUTS
@@ -740,8 +732,7 @@ function Get-FimRequestParameter
 }
 
 ##TODO: Add parameter sets and help to this
-Function New-FimSynchronizationRule
-{
+Function New-FimSynchronizationRule {
    	param
     (
         $DisplayName,
@@ -831,8 +822,7 @@ Function New-FimSynchronizationRule
 	$srImportObject | Skip-DuplicateCreateRequest -Uri $Uri | Import-FIMConfig -Uri $Uri
 }
 
-function Start-SQLAgentJob
-{
+Function Start-SQLAgentJob {
 	param
 	(
 		[parameter(Mandatory=$false)]
@@ -874,139 +864,3 @@ function Start-SQLAgentJob
 	}
 	$connection.Close()
 }
-
-function New-FimSchemaBinding
-{
-   	param
-   	(
-   		$ObjectType, 
-		$AttributeType, 
-		$Required = 'false',
-		$DisplayName = $AttributeType,
-		$Description = $AttributeType,
-        <#
-	    .PARAMETER Uri
-	    The Uniform Resource Identifier (URI) of themmsshortService. The following example shows how to set this parameter: -uri "http://localhost:5725"
-	    #>
-	    [String]
-	    $Uri = "http://localhost:5725"
-
-   	)     
-	if (Get-FimSchemaBinding $AttributeType $ObjectType $Uri)
-	{
-		Write-Warning "Binding Already Exists for $objectType and $attributeType"
-        return
-	}
-    
-    New-FimImportObject -ObjectType BindingDescription -State Create -Uri $Uri -Changes @{
-        BoundAttributeType	= ('AttributeTypeDescription',	'Name',	$AttributeType)
-		BoundObjectType		= ('ObjectTypeDescription',		'Name',	$ObjectType)
-        DisplayName			= $DisplayName 
-		Description			= $Description
-        Required			= $Required
-	} -SkipDuplicateCheck -ApplyNow 
-} 
-
-function New-FimSchemaAttribute
-{
-  	param
-   	(
-   		$Name, 
-		$DisplayName = $Name, 
-		$DataType,
-		$Multivalued = 'false',
-        $Description = $Name,
-        <#
-	    .PARAMETER Uri
-	    The Uniform Resource Identifier (URI) of themmsshortService. The following example shows how to set this parameter: -uri "http://localhost:5725"
-	    #>
-	    [String]
-	    $Uri = "http://localhost:5725"
-
-   	)     
-    New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Uri $uri -Changes @{
-		DisplayName = $DisplayName
-		Name		= $Name
-		DataType	= $DataType
-		Multivalued	= $Multivalued
-        Description	= $Description
-	} -ApplyNow
-} 
- 
-function New-FimSchemaObjectType
-{
-  	param
-   	(
-   		$Name, 
-		$DisplayName = $Name,
-        $Description = $Name,
-        <#
-	    .PARAMETER Uri
-	    The Uniform Resource Identifier (URI) of themmsshortService. The following example shows how to set this parameter: -uri "http://localhost:5725"
-	    #>
-	    [String]
-	    $Uri = "http://localhost:5725"
-   	)             
-    New-FimImportObject -ObjectType ObjectTypeDescription -State Create -Uri $Uri -Changes @{
-		DisplayName = $DisplayName
-		Name		= $Name
-        Description	= $Description
-	} -ApplyNow             
-}
-
-function Get-FimSchemaBinding
-{
-  	Param
-   	(        
-        [String]		
-        $AttributeType,
-		
-        [String]		
-        $ObjectType,
-        <#
-	    .PARAMETER Uri
-	    The Uniform Resource Identifier (URI) of themmsshortService. The following example shows how to set this parameter: -uri "http://localhost:5725"
-	    #>
-	    [String]
-	    $Uri = "http://localhost:5725"
-
-    )  
-	$attributeTypeID 	= Get-FimObjectID AttributeTypeDescription 	Name $AttributeType
-	$objectTypeID 		= Get-FimObjectID ObjectTypeDescription 	Name $ObjectType
-	
-    $xPathFilter = "/BindingDescription[BoundObjectType='{0}' and BoundAttributeType='{1}']" -f $objectTypeID, $attributeTypeID
-    Export-FIMConfig -OnlyBaseResources -CustomConfig $xPathFilter -Uri $Uri | Convert-FimExportToPSObject           
-}
-
-function New-FimSet
-{
-  	param
-   	(
-		$DisplayName = $Name,
-        $Description = $Name,
-        $Filter, ##TODO - make sure we were passed JUST the XPath filter
-        <#
-	    .PARAMETER Uri
-	    The Uniform Resource Identifier (URI) of themmsshortService. The following example shows how to set this parameter: -uri "http://localhost:5725"
-	    #>
-	    [String]
-	    $Uri = "http://localhost:5725"
-   	)
-    # this is all one line to make this backwards compatible with FIM 2010 RTM  
-    $setXPathFilter = "<Filter xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' Dialect='http://schemas.microsoft.com/2006/11/XPathFilterDialect' xmlns='http://schemas.xmlsoap.org/ws/2004/09/enumeration'>{0}</Filter>" -F $Filter
-    New-FimImportObject -ObjectType Set -State Create -Uri $Uri -Changes @{
-		DisplayName = $DisplayName
-        Description	= $Description
-        Filter      = $setXPathFilter
-	} -ApplyNow             
- }
-
- # backwards compat for the old names of these functions
- New-Alias -Name Add-FimSchemaBinding -Value New-FimSchemaBinding
- New-Alias -Name Add-FimSchemaAttribute -Value New-FimSchemaAttribute
- New-Alias -Name Add-FimSchemaObject -Value New-FimSchemaObjectType
- New-Alias -Name Add-FimSet -Value New-FimSet
-
- # this is required because aliases aren't
- # exported by default
- Export-ModuleMember -Function * -Alias *

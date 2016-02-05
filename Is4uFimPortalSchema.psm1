@@ -16,8 +16,7 @@ here: http://opensource.org/licenses/gpl-3.0.
 Set-StrictMode -Version Latest
 Import-Module .\Is4uFimPortal.psm1
 
-Function New-Attribute
-{
+Function New-Attribute {
 <#
 	.SYNOPSIS
 	Create a new attribute in the FIM Portal schema.
@@ -61,8 +60,7 @@ Function New-Attribute
 	return $id
 }
 
-Function Update-Attribute
-{
+Function Update-Attribute {
 <#
 	.SYNOPSIS
 	Update an attribute in the FIM Portal schema.
@@ -95,8 +93,7 @@ Function Update-Attribute
 	return $id
 }
 
-Function Remove-Attribute
-{
+Function Remove-Attribute {
 <#
 	.SYNOPSIS
 	Remove an attribute from the FIM Portal schema.
@@ -112,12 +109,10 @@ Function Remove-Attribute
 		[String]
 		$Name
 	)
-	$anchor = @{"Name"=$Name}
-	New-FimImportObject -ObjectType AttributeTypeDescription -State Delete -AnchorPairs $anchor -ApplyNow
+	Remove-FimObject -AnchorName Name -AnchorValue $Name -ObjectType AttributeTypeDescription
 }
 
-Function New-Binding
-{
+Function New-Binding {
 <#
 	.SYNOPSIS
 	Create a new attribute binding in the FIM Portal schema.
@@ -139,6 +134,10 @@ Function New-Binding
 		[Parameter(Mandatory=$True)]
 		[String]
 		$DisplayName, 
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description, 
 	
 		[Parameter(Mandatory=$False)]
 		[String]
@@ -153,13 +152,63 @@ Function New-Binding
 	$changes = @{}
 	$changes.Add("Required", $Required)
 	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
 	$changes.Add("BoundAttributeType", $attrId)
 	$changes.Add("BoundObjectType", $objId)
 	New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow
+	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
+	[UniqueIdentifier] $id = $binding.ObjectID
+	return $id.Value
 }
 
-Function Remove-Binding
-{
+Function Update-Binding {
+<#
+	.SYNOPSIS
+	Update an attribute binding in the FIM Portal schema.
+
+	.DESCRIPTION
+	Update an attribute binding in the FIM Portal schema.
+
+	.EXAMPLE
+	Update-Binding -AttributeName Visa -DisplayName "Visa Card Number"
+
+	.EXAMPLE
+	Update-Binding -AttributeName Visa -DisplayName "Visa Card Number" -Required $False -ObjectType Person
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttributeName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName, 
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Description, 
+	
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Required = "False",
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$ObjectType = "Person"
+	)
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
+	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
+	[UniqueIdentifier] $id = $binding.ObjectID
+	$anchor = @{"ObjectID" = $id.Value}
+	$changes.Add("Required", $Required)
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType BindingDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	return $id.Value
+}
+
+Function Remove-Binding {
 <#
 	.SYNOPSIS
 	Remove an attribute binding from the FIM Portal schema.
@@ -183,8 +232,7 @@ Function Remove-Binding
 	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
 	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
 	[UniqueIdentifier] $id = $binding.ObjectID
-	$anchor = @{"ObjectID" = $id.Value}
-	New-FimImportObject -ObjectType BindingDescription -State Delete -AnchorPairs $anchor -ApplyNow
+	Remove-FimObject -AnchorName ObjectID -AnchorValue $id.Value -ObjectType BindingDescription
 }
 
 Function New-AttributeAndBinding {
@@ -223,7 +271,7 @@ Function New-AttributeAndBinding {
 
 	[UniqueIdentifier] $attrId = New-Attribute -Name $Name -DisplayName $DisplayName -Type $Type -MultiValued $MultiValued
 	New-Binding -AttributeName $Name -DisplayName $DisplayName -ObjectType $ObjectType
-	if($ObjectType -eq "Person"){
+	if($ObjectType -eq "Person") {
 		Add-AttributeToMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Add-AttributeToMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
 	}
@@ -250,7 +298,7 @@ Function Remove-AttributeAndBinding {
 		[String]
 		$ObjectType = "Person"
 	)
-	if($ObjectType -eq "Person"){
+	if($ObjectType -eq "Person") {
 		Remove-AttributeFromMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Remove-AttributeFromMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
 	}
@@ -281,8 +329,7 @@ Function Import-SchemaExtensions {
 	}
 }
 
-Function New-ObjectType
-{
+Function New-ObjectType {
 <#
 	.SYNOPSIS
 	Create a new object type in the FIM Portal schema.
@@ -315,8 +362,7 @@ Function New-ObjectType
 	return $id
 }
 
-Function Update-ObjectType
-{
+Function Update-ObjectType {
 <#
 	.SYNOPSIS
 	Update the object type in the FIM Portal schema.
@@ -347,4 +393,23 @@ Function Update-ObjectType
 	New-FimImportObject -ObjectType ObjectTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name
 	return $id
+}
+
+Function Remove-ObjectType {
+<#
+	.SYNOPSIS
+	Remove an object type from the FIM Portal schema.
+
+	.DESCRIPTION
+	Remove an object type from the FIM Portal schema.
+
+	.EXAMPLE
+	Remove-ObjectType -Name Department
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Name
+	)
+	Remove-FimObject -AnchorName Name -AnchorValue $Name -ObjectType ObjectTypeDescription
 }

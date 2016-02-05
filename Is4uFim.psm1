@@ -15,8 +15,7 @@ here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
 
-Function Start-Is4uFimSchedule
-{
+Function Start-Is4uFimSchedule {
 <#
 	.SYNOPSIS
 	Starts the on demand schedule of the IS4U FIM Scheduler.
@@ -30,15 +29,14 @@ Function Start-Is4uFimSchedule
 	[System.Reflection.Assembly]::Load("System.ServiceProcess, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a") | Out-Null
 	$is4uScheduler = New-Object System.ServiceProcess.ServiceController
 	$is4uScheduler.Name = "IS4UFIMScheduler"
-	if($is4uScheduler.Status -eq "Running"){
+	if($is4uScheduler.Status -eq "Running") {
 		$is4uScheduler.ExecuteCommand(234)
 	} else {
 		Write-Host $is4uScheduler.DisplayName "is not running"
 	}
 }
 
-Function Get-FimStatus
-{
+Function Get-FimStatus {
 <#
 	.SYNOPSIS
 	Get the status of the FIM Windows Services
@@ -53,7 +51,7 @@ Function Get-FimStatus
 	$oricolor = $Host.UI.RawUI.ForegroundColor
 	foreach($service in $services) {
 		$s = Get-Service -Name $service -ErrorAction SilentlyContinue
-		if(!$s){
+		if(!$s) {
 			Write-Warning "Service $service not present on this host"
 		} else {
 			$s | Format-Table -Property @{label = 'Status'; Expression = { if( $_.Status -ne "Running") `
@@ -65,8 +63,7 @@ Function Get-FimStatus
 	$Host.UI.RawUI.ForegroundColor = $oricolor
 }
 
-Function Get-Sid
-{
+Function Get-Sid {
 <#
 	.SYNOPSIS
 	Get the security identifier (SID) for the given user.
@@ -86,8 +83,7 @@ Function Get-Sid
 	return $ID.Translate([System.Security.Principal.SecurityIdentifier]).toString()
 }
 
-Function Set-DcomPermission
-{
+Function Set-DcomPermission {
 <#
 	.SYNOPSIS
 	Sets the Dcom permissions required for FIM SSPR.
@@ -119,16 +115,12 @@ Function Set-DcomPermission
 
 	#MachineLaunchRestriction - Local Launch, Remote Launch, Local Activation, Remote Activation
 	$DCOMSDDLMachineLaunchRestriction = "A;;CCDCLCSWRP;;;$sid"
-
 	#MachineAccessRestriction - Local Access, Remote Access
 	$DCOMSDDLMachineAccessRestriction = "A;;CCDCLC;;;$sid"
-
 	#DefaultLaunchPermission - Local Launch, Remote Launch, Local Activation, Remote Activation
 	$DCOMSDDLDefaultLaunchPermission = "A;;CCDCLCSWRP;;;$sid"
-
 	#DefaultAccessPermision - Local Access, Remote Access
 	$DCOMSDDLDefaultAccessPermision = "A;;CCDCLC;;;$sid"
-
 	#PartialMatch
 	$DCOMSDDLPartialMatch = "A;;\w+;;;$sid"
 
@@ -151,39 +143,27 @@ Function Set-DcomPermission
 
 		# Build the new permissions
 		Write-Host "`tBuilding the new permissions..."
-		if (($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -notmatch $DCOMSDDLMachineLaunchRestriction))
-		{
+		if (($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -notmatch $DCOMSDDLMachineLaunchRestriction)) {
 			$NewDCOMSDDLMachineLaunchRestriction = $CurrentDCOMSDDLMachineLaunchRestriction.SDDL -replace $DCOMSDDLPartialMatch, $DCOMSDDLMachineLaunchRestriction
-		}
-		else
-		{
+		} else {
 			$NewDCOMSDDLMachineLaunchRestriction = $CurrentDCOMSDDLMachineLaunchRestriction.SDDL += "(" + $DCOMSDDLMachineLaunchRestriction + ")"
 		}
   
-		if (($CurrentDCOMSDDLMachineAccessRestriction.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLMachineAccessRestriction.SDDL -notmatch $DCOMSDDLMachineAccessRestriction))
-		{
+		if (($CurrentDCOMSDDLMachineAccessRestriction.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLMachineAccessRestriction.SDDL -notmatch $DCOMSDDLMachineAccessRestriction)) {
 			$NewDCOMSDDLMachineAccessRestriction = $CurrentDCOMSDDLMachineAccessRestriction.SDDL -replace $DCOMSDDLPartialMatch, $DCOMSDDLMachineLaunchRestriction
-		}
-		else
-		{
+		} else {
 			$NewDCOMSDDLMachineAccessRestriction = $CurrentDCOMSDDLMachineAccessRestriction.SDDL += "(" + $DCOMSDDLMachineAccessRestriction + ")"
 		}
 
-		if (($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -notmatch $DCOMSDDLDefaultLaunchPermission))
-		{
+		if (($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -notmatch $DCOMSDDLDefaultLaunchPermission)) {
 			$NewDCOMSDDLDefaultLaunchPermission = $CurrentDCOMSDDLDefaultLaunchPermission.SDDL -replace $DCOMSDDLPartialMatch, $DCOMSDDLDefaultLaunchPermission
-		}
-		else
-		{
+		} else {
 			$NewDCOMSDDLDefaultLaunchPermission = $CurrentDCOMSDDLDefaultLaunchPermission.SDDL += "(" + $DCOMSDDLDefaultLaunchPermission + ")"
 		}
 
-		if (($CurrentDCOMSDDLDefaultAccessPermission.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLDefaultAccessPermission.SDDL -notmatch $DCOMSDDLDefaultAccessPermision))
-		{
+		if (($CurrentDCOMSDDLDefaultAccessPermission.SDDL -match $DCOMSDDLPartialMatch) -and ($CurrentDCOMSDDLDefaultAccessPermission.SDDL -notmatch $DCOMSDDLDefaultAccessPermision)) {
 			$NewDCOMSDDLDefaultAccessPermission = $CurrentDCOMSDDLDefaultAccessPermission.SDDL -replace $DCOMSDDLPartialMatch, $DCOMSDDLDefaultAccessPermision
-		}
-		else
-		{
+		} else {
 			$NewDCOMSDDLDefaultAccessPermission = $CurrentDCOMSDDLDefaultAccessPermission.SDDL += "(" + $DCOMSDDLDefaultAccessPermision + ")"
 		}
 
@@ -203,44 +183,32 @@ Function Set-DcomPermission
 
 		# Apply the changes
 		Write-Host "`tApplying changes..."
-		if ($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -match $DCOMSDDLMachineLaunchRestriction)
-		{
+		if ($CurrentDCOMSDDLMachineLaunchRestriction.SDDL -match $DCOMSDDLMachineLaunchRestriction) {
 			Write-Host "`t`tCurrent MachineLaunchRestriction matches desired value."
-		}
-		else
-		{
+		} else {
 			$result = $Reg.SetBinaryValue(2147483650,"software\microsoft\ole","MachineLaunchRestriction", $DCOMbinarySDMachineLaunchRestriction.binarySD)
-			if($result.ReturnValue='0'){Write-Host "  Applied MachineLaunchRestricition complete."}
+			if($result.ReturnValue='0') {Write-Host "  Applied MachineLaunchRestricition complete."}
 		}
 
-		if ($CurrentDCOMSDDLMachineAccessRestriction.SDDL -match $DCOMSDDLMachineAccessRestriction)
-		{
+		if ($CurrentDCOMSDDLMachineAccessRestriction.SDDL -match $DCOMSDDLMachineAccessRestriction) {
 			Write-Host "`t`tCurrent MachineAccessRestriction matches desired value."
-		}
-		else
-		{
+		} else {
 			$result = $Reg.SetBinaryValue(2147483650,"software\microsoft\ole","MachineAccessRestriction", $DCOMbinarySDMachineAccessRestriction.binarySD)
-			if($result.ReturnValue='0'){Write-Host "  Applied MachineAccessRestricition complete."}
+			if($result.ReturnValue='0') {Write-Host "  Applied MachineAccessRestricition complete."}
 		}
 
-		if ($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -match $DCOMSDDLDefaultLaunchPermission)
-		{
+		if ($CurrentDCOMSDDLDefaultLaunchPermission.SDDL -match $DCOMSDDLDefaultLaunchPermission) {
 			Write-Host "`t`tCurrent DefaultLaunchPermission matches desired value."
-		}
-		else
-		{
+		} else {
 			$result = $Reg.SetBinaryValue(2147483650,"software\microsoft\ole","DefaultLaunchPermission", $DCOMbinarySDDefaultLaunchPermission.binarySD)
-			if($result.ReturnValue='0'){Write-Host "  Applied DefaultLaunchPermission complete."}
+			if($result.ReturnValue='0') {Write-Host "  Applied DefaultLaunchPermission complete."}
 		}
 
-		if ($CurrentDCOMSDDLDefaultAccessPermission.SDDL -match $DCOMSDDLDefaultAccessPermision)
-		{
+		if ($CurrentDCOMSDDLDefaultAccessPermission.SDDL -match $DCOMSDDLDefaultAccessPermision) {
 			Write-Host "`t`tCurrent DefaultAccessPermission matches desired value."
-		}
-		else
-		{
+		} else {
 			$result = $Reg.SetBinaryValue(2147483650,"software\microsoft\ole","DefaultAccessPermission", $DCOMbinarySDDefaultAccessPermission.binarySD)
-			if($result.ReturnValue='0'){Write-Host "  Applied DefaultAccessPermission complete."}
+			if($result.ReturnValue='0') {Write-Host "  Applied DefaultAccessPermission complete."}
 		}
 	}
 	trap 
@@ -254,8 +222,7 @@ Function Set-DcomPermission
 	}
 }
 
-Function Set-WmiPermission
-{
+Function Set-WmiPermission {
 <#
 	.SYNOPSIS
 	Sets the WMI permissions required for FIM SSPR.
@@ -316,12 +283,12 @@ Function Set-WmiPermission
 		$WMIconvertedPermissions = ,$WMIbinarySD.BinarySD
  
 		# Apply the changes
-		write-host "`tApplying changes..."
+		Write-Host "`tApplying changes..."
 		if ($CurrentWMISDDL.SDDL -match $WMISDDL) {
 			Write-Host "`t`tCurrent WMI Permissions matches desired value."
 		} else {
 			$result = $security.PsBase.InvokeMethod("SetSD",$WMIconvertedPermissions) 
-			if($result='0'){write-host "`t`tApplied WMI Security complete."}
+			if($result='0') {Write-Host "`t`tApplied WMI Security complete."}
 		}
 	}
 }
