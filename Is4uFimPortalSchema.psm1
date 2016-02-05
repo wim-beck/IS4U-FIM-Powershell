@@ -201,6 +201,7 @@ Function Update-Binding {
 	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
 	[UniqueIdentifier] $id = $binding.ObjectID
 	$anchor = @{"ObjectID" = $id.Value}
+	$changes = @{}
 	$changes.Add("Required", $Required)
 	$changes.Add("DisplayName", $DisplayName)
 	$changes.Add("Description", $Description)
@@ -540,7 +541,7 @@ Function New-ObjectTypeConfiguration {
 			Update-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
 		} else {
 			Write-Host "Create binding '$bindingDisplayName'"
-			New-Binding -AttrName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
+			New-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
 		}
 	}
 
@@ -576,7 +577,7 @@ Function New-ObjectTypeConfiguration {
 	$exportFile = "$pwd/$date"+"_userEdit_after.xml"
 	$xDoc.Save($exportFile)
 	
-	$anchor = @{'DisplayName' = $name}
+	$anchor = @{'DisplayName' = $rcdcName}
 	$changes = @{}
 	$changes.Add("ConfigurationData", $xDoc.ToString())
 	New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
