@@ -457,7 +457,7 @@ Function New-ObjectTypeConfiguration {
 	#-------------------------------
 	Write-Host "Add object to synchronization filter"
 	#-------------------------------
-	Add-ObjectToSynchronizationFilter $objectTypeId
+	Add-ObjectToSynchronizationFilter -ObjectId $objectTypeId
 
 	#-------------------------------
 	Write-Host "Create Set"

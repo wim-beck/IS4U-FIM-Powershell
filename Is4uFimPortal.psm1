@@ -129,8 +129,7 @@ Function Remove-ObjectsFromPortal {
 		if($specialUsers.Contains($objId)) {
 			Write-Host "Do not delete account with id '$objId'"
 		} else {
-			$anchor = @{'ObjectID' = $objId}
-			New-FimImportObject -ObjectType $ObjectType -State Delete -Anchor $anchor -ApplyNow
+			Remove-FimObject -AnchorName ObjectID -AnchorValue $objId -ObjectType $ObjectType
 		}
 	}
 }
@@ -186,32 +185,6 @@ Function Set-ObjectSid {
 	} else {
 		Throw "Cannot find an account with name '$AccountName' and domain '$Domain' or multiple matches found."
 	}
-}
-
-Function Add-ObjectToSet {
-<#
-	.SYNOPSIS
-	Add an object to the explicit members of a set.
-
-	.DESCRIPTION
-	Add an object to the explicit members of a set.
-
-	.EXAMPLE
-	Add-ObjectToSet -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		[String]
-		$DisplayName,
-		
-		[Parameter(Mandatory=$True)]
-		[UniqueIdentifier]
-		$ObjectId
-	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @()
-	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
-	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
 }
 
 Function New-Workflow {
@@ -276,6 +249,22 @@ Function Update-Workflow {
 	New-FimImportObject -ObjectType WorkflowDefinition -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $displayName
 	return $id
+}
+
+Function Remove-Workflow {
+<#
+	.SYNOPSIS
+	Remove a workflow
+
+	.DESCRIPTION
+	Remove a workflow
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName
+	)
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType WorkflowDefinition
 }
 
 Function New-Mpr {
@@ -435,6 +424,114 @@ Function Update-Mpr {
 	return $id
 }
 
+Function Enable-Mpr {
+<#
+	.SYNOPSIS
+	Enables a MPR.
+
+	.DESCRIPTION
+	Enables the given management policy rule.
+
+	.EXAMPLE
+	PS C:\$ Enable-Mpr "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		$DisplayName
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @{}
+	$changes.Add("Disabled", $false)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Disable-Mpr {
+<#
+	.SYNOPSIS
+	Disables a MPR.
+
+	.DESCRIPTION
+	Disables the given management policy rule.
+
+	.EXAMPLE
+	PS C:\$ Disable-Mpr "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		$DisplayName
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @{}
+	$changes.Add("Disabled", $true)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Add-AttributeToMPR {
+<#
+	.SYNOPSIS
+	Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+
+	.DESCRIPTION
+	Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+
+	.EXAMPLE
+	Add-AttributeToMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttrName,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$MprName
+	)
+	$anchor = @{'DisplayName' = $MprName}
+	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-AttributeFromMPR {
+<#
+	.SYNOPSIS
+	Removes an attribute from the list of selected attributes in the scope of the management policy rule.
+
+	.DESCRIPTION
+	Removes an attribute from the list of selected attributes in the scope of the management policy rule.
+
+	.EXAMPLE
+	Remove-AttributeFromMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttrName,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$MprName
+	)
+	$anchor = @{'DisplayName' = $MprName}
+	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
+	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-Mpr {
+<#
+	.SYNOPSIS
+	Remove a management policy rule
+
+	.DESCRIPTION
+	Remove a management policy rule
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName
+	)
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType ManagementPolicyRule
+}
+
 Function New-Set {
 <#
 	.SYNOPSIS
@@ -497,6 +594,48 @@ Function Update-Set {
 	return $id
 }
 
+Function Add-ObjectToSet {
+<#
+	.SYNOPSIS
+	Add an object to the explicit members of a set.
+
+	.DESCRIPTION
+	Add an object to the explicit members of a set.
+
+	.EXAMPLE
+	Add-ObjectToSet -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+		
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ObjectId
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
+	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+}
+
+Function Remove-Set {
+<#
+	.SYNOPSIS
+	Remove a set.
+
+	.DESCRIPTION
+	Remove a set.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName
+	)
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType Set
+}
+
 Function Get-Filter {
 <#
 	.SYNOPSIS
@@ -510,48 +649,6 @@ Function Get-Filter {
 		$XPathFilter
 	)
 	return "<Filter xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' Dialect='http://schemas.microsoft.com/2006/11/XPathFilterDialect' xmlns='http://schemas.xmlsoap.org/ws/2004/09/enumeration'>{0}</Filter>" -F $XPathFilter
-}
-
-Function Enable-Mpr {
-<#
-	.SYNOPSIS
-	Enables a MPR.
-
-	.DESCRIPTION
-	Enables the given management policy rule.
-
-	.EXAMPLE
-	PS C:\$ Enable-Mpr "Administration: Administrators can read and update Users"
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		$DisplayName
-	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @{}
-	$changes.Add("Disabled", $false)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
-}
-
-Function Disable-Mpr {
-<#
-	.SYNOPSIS
-	Disables a MPR.
-
-	.DESCRIPTION
-	Disables the given management policy rule.
-
-	.EXAMPLE
-	PS C:\$ Disable-Mpr "Administration: Administrators can read and update Users"
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		$DisplayName
-	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @{}
-	$changes.Add("Disabled", $true)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
 Function Test-ObjectExists {
@@ -648,54 +745,32 @@ Function Get-FimObject {
 	return (Convert-FimExportToPSObject $obj)
 }
 
-Function Add-AttributeToMPR {
+Function Remove-FimObject {
 <#
 	.SYNOPSIS
-	Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+	Delete an object.
 
 	.DESCRIPTION
-	Adds an attribute to the list of selected attributes in the scope of the management policy rule.
+	Delete an object given the object type, anchor attribute and anchor value.
 
 	.EXAMPLE
-	Add-AttributeToMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
+	Remove-FimObject -AnchorName AccountName -AnchorValue mickey.mouse -ObjectType Person
 #>
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$AttrName,
+		$AnchorName,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AnchorValue,
 		
-		[Parameter(Mandatory=$True)]
+		[Parameter(Mandatory=$False)]
 		[String]
-		$MprName
+		$ObjectType = "Person"
 	)
-	$anchor = @{'DisplayName' = $MprName}
-	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
-}
-
-Function Remove-AttributeFromMPR {
-<#
-	.SYNOPSIS
-	Removes an attribute from the list of selected attributes in the scope of the management policy rule.
-
-	.DESCRIPTION
-	Removes an attribute from the list of selected attributes in the scope of the management policy rule.
-
-	.EXAMPLE
-	Remove-AttributeFromMPR -AttrName Visa -MprName "Administration: Administrators can read and update Users"
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		[String]
-		$AttrName,
-		
-		[Parameter(Mandatory=$True)]
-		[String]
-		$MprName
-	)
-	$anchor = @{'DisplayName' = $MprName}
-	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$anchor = @{$AnchorName = $AnchorValue}
+	New-FimImportObject -ObjectType $ObjectType -State Delete -Anchor $anchor -ApplyNow
 }
 
 Function Add-ObjectToSynchronizationFilter {
@@ -708,19 +783,45 @@ Function Add-ObjectToSynchronizationFilter {
 
 	.EXAMPLE
 	[UniqueIdentifier] $objectTypeId = New-ObjectType -Name Department -DisplayName Department -Description Department
-	Add-ObjectToSynchronizationFilter -Object $objectTypeId
+	Add-ObjectToSynchronizationFilter -ObjectId $objectTypeId
 #>
 	param(
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
-		$Object,
+		$ObjectId,
 
 		[Parameter(Mandatory=$False)]
 		[String]
 		$DisplayName = "Synchronization Filter"
 	)
 	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'SynchronizeObjectType' -AttributeValue $Object.ToString())
+	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'SynchronizeObjectType' -AttributeValue $ObjectId.ToString())
+	New-FimImportObject -ObjectType SynchronizationFilter -State Put -Anchor $anchor -Changes $changes -ApplyNow
+}
+
+Function Remove-ObjectFromSynchronizationFilter {
+<#
+	.SYNOPSIS
+	Removes an object type from the synchronization filter.
+
+	.DESCRIPTION
+	Removes an object type from the synchronization filter.
+
+	.EXAMPLE
+	[UniqueIdentifier] $objectTypeId = New-ObjectType -Name Department -DisplayName Department -Description Department
+	Remove-ObjectFromSynchronizationFilter -ObjectId $objectTypeId
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ObjectId,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$DisplayName = "Synchronization Filter"
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'SynchronizeObjectType' -AttributeValue $ObjectId.ToString())
 	New-FimImportObject -ObjectType SynchronizationFilter -State Put -Anchor $anchor -Changes $changes -ApplyNow
 }
 
@@ -796,34 +897,6 @@ Function Remove-AttributeFromFilterScope {
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'AllowedAttributes' -AttributeValue $attrId)
 	New-FimImportObject -ObjectType FilterScope -State Put -Anchor $anchor -Changes $changes -ApplyNow
-}
-
-Function Remove-FimObject {
-<#
-	.SYNOPSIS
-	Delete an object.
-
-	.DESCRIPTION
-	Delete an object given the object type, anchor attribute and anchor value.
-
-	.EXAMPLE
-	Remove-FimObject -AnchorName AccountName -AnchorValue mickey.mouse -ObjectType Person
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		[String]
-		$AnchorName,
-
-		[Parameter(Mandatory=$True)]
-		[String]
-		$AnchorValue,
-		
-		[Parameter(Mandatory=$False)]
-		[String]
-		$ObjectType = "Person"
-	)
-	$anchor = @{$AnchorName = $AnchorValue}
-	New-FimImportObject -ObjectType $ObjectType -State Delete -Anchor $anchor -ApplyNow
 }
 
 Function New-SearchScope {
