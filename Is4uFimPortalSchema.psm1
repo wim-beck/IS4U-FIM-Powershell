@@ -558,7 +558,7 @@ Function New-ObjectTypeConfiguration {
 	$file = "$pwd/$date"+"_userEdit_before.xml"
 	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
 
-	$xDoc = [XDocument]::Load("$file")
+	$xDoc = [XDocument]::Load($file)
 	$panel = [XElement] $xDoc.Root.Element($ns + "Panel")
 	$grouping = [XElement] ($panel.Elements($ns+"Grouping") | Where { $_.Attribute($ns + "Name").Value -eq "BasicInfo" } | Select -index 0)
 
@@ -578,8 +578,7 @@ Function New-ObjectTypeConfiguration {
 	$xDoc.Save($exportFile)
 	
 	$anchor = @{'DisplayName' = $rcdcName}
-	$changes = @{}
-	$changes.Add("ConfigurationData", $xDoc.ToString())
+	$changes = @{"ConfigurationData" = $xDoc.ToString()}
 	New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 
 	#-------------------------------
@@ -708,4 +707,6 @@ Function Get-RcdcIdentityPicker {
 	$properties.Add($property)
 
 	$element.Add($properties)
+
+	return $element
 }
