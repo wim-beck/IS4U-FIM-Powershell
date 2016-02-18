@@ -65,37 +65,37 @@ Function Get-DynamicGroupFilter {
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;is;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;is;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $isNot.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;is not;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;is not;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;starts with;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;starts with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $startsNotwith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;starts not with;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;starts not with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;ends with;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;ends with;$val;" | Out-File $OutputFile -Append
 			}
 			$matches = $endsNotWith.Matches($criteria);
 			foreach($match in $matches) {
 				$attr = $match.Groups[1].Value
 				$val = $match.Groups[2].Value
-				Write-Output ";;$attr;ends not with;$val;" | Out-File $OutputFile -Append
+				Write-Output "$name;;$attr;ends not with;$val;" | Out-File $OutputFile -Append
 			}
 		} else {
 			Write-Host "Filter did not match for group" $group.DisplayName
