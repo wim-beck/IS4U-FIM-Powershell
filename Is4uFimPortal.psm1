@@ -636,6 +636,36 @@ Function Remove-Set {
 	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType Set
 }
 
+Function Get-SetMemberships {
+<#
+	.SYNOPSIS
+	Get set memberships for the given object.
+
+	.DESCRIPTION
+	Get set memberships for the given object.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Value,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Attribute = "AccountName",
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		[ValidateScript({("Person", "Group") -ccontains $_})]
+		$ObjectType = "Person"
+	)
+	$id = Get-FimObjectID -ObjectType $ObjectType -AttributeName $AttributeName -AttributeValue $AttributeValue
+	$sets = Export-FIMConfig -CustomConfig "/Set[ComputedMember='$id' or ExplicitMember='$id']" -OnlyBaseResources
+	foreach($s in $sets){
+		$set=Convert-FimExportToPSObject $s
+		Write-Host $set.DisplayName
+	}
+}
+
 Function Get-Filter {
 <#
 	.SYNOPSIS
