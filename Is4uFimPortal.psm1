@@ -647,11 +647,11 @@ Function Get-SetMemberships {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$Value,
+		$AttributeValue,
 
 		[Parameter(Mandatory=$False)]
 		[String]
-		$Attribute = "AccountName",
+		$AttributeName = "AccountName",
 
 		[Parameter(Mandatory=$False)]
 		[String]
@@ -661,7 +661,7 @@ Function Get-SetMemberships {
 	$id = Get-FimObjectID -ObjectType $ObjectType -AttributeName $AttributeName -AttributeValue $AttributeValue
 	$sets = Export-FIMConfig -CustomConfig "/Set[ComputedMember='$id' or ExplicitMember='$id']" -OnlyBaseResources
 	foreach($s in $sets){
-		$set=Convert-FimExportToPSObject $s
+		$set = Convert-FimExportToPSObject $s
 		Write-Host $set.DisplayName
 	}
 }
