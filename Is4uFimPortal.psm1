@@ -103,6 +103,36 @@ Function Get-DynamicGroupFilter {
 	}
 }
 
+Function Get-GroupMemberships {
+<#
+	.SYNOPSIS
+	Get group memberships for the given object.
+
+	.DESCRIPTION
+	Get group memberships for the given object.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$AttributeValue,
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		$AttributeName = "AccountName",
+
+		[Parameter(Mandatory=$False)]
+		[String]
+		[ValidateScript({("Person", "Group") -ccontains $_})]
+		$ObjectType = "Person"
+	)
+	$id = Get-FimObjectID -ObjectType $ObjectType -AttributeName $AttributeName -AttributeValue $AttributeValue
+	$groups = Export-FIMConfig -CustomConfig "/Group[ComputedMember='$id' or ExplicitMember='$id']" -OnlyBaseResources
+	foreach($g in $groups){
+		$group = Convert-FimExportToPSObject $g
+		Write-Host $group.DisplayName
+	}
+}
+
 Function Remove-ObjectsFromPortal {
 <#
 	.SYNOPSIS
