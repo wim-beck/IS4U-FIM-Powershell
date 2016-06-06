@@ -275,6 +275,9 @@ Function New-AttributeAndBinding {
 	if($ObjectType -eq "Person") {
 		Add-AttributeToMPR -AttrName $Name -MprName "Administration: Administrators can read and update Users"
 		Add-AttributeToMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls users it synchronizes"
+	} elseif($ObjectType -eq "Group") {
+		Add-AttributeToMPR -AttrName $Name -MprName "Group management: Group administrators can update group resources"
+		Add-AttributeToMPR -AttrName $Name -MprName "Synchronization: Synchronization account controls group resources it synchronizes"
 	}
 	Add-AttributeToFilterScope -AttributeId $attrId -DisplayName "Administrator Filter Permission"
 }
@@ -305,7 +308,7 @@ Function Remove-AttributeAndBinding {
 	}
 	Remove-AttributeFromFilterScope -AttributeName $Name -DisplayName "Administrator Filter Permission"
 	Remove-Binding -AttributeName $Name -ObjectType $ObjectType
-	Remove-Attribute -AttributeName $Name
+	Remove-Attribute -Name $Name
 }
 
 Function Import-SchemaExtensions {
@@ -323,6 +326,8 @@ Function Import-SchemaExtensions {
 		[Parameter(Mandatory=$True)]
 		[String]
 		$CsvFile
+
+		### TODO : add parameter for MPR
 	)
 	$csv = Import-Csv $CsvFile
 	ForEach ($entry in $csv) {
@@ -504,7 +509,7 @@ Function New-ObjectTypeConfiguration {
 	}
 
 	#-------------------------------
-	Write-Host "Create attribute for the reference attribute"
+	Write-Host "Create the reference attribute"
 	#-------------------------------
 	[UniqueIdentifier] $attrId = [Guid]::Empty
 	$attrConfig = $objectConfig.Element("Attribute")
@@ -522,7 +527,7 @@ Function New-ObjectTypeConfiguration {
 	}
 	
 	#-------------------------------
-	Write-Host "Add attribute to MPR's"
+	Write-Host "Add reference attribute to MPR's"
 	#-------------------------------
 	foreach($mprConfig in $attrConfig.Element("Policy").Elements("MPR")) {
 		Add-AttributeToMPR -AttrName $attrName -MprName $mprConfig.Element("DisplayName").Value
@@ -551,6 +556,8 @@ Function New-ObjectTypeConfiguration {
 	$ns = [XNameSpace] "http://schemas.microsoft.com/2006/11/ResourceManagement"
 	$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
 	$rcdcObjectType = $attrConfig.Element("RCDCs").Element("RCDC").Element("Object").Value
+	$rcdcGrouping = $attrConfig.Element("RCDCs").Element("RCDC").Element("Grouping").Value
+	$rcdcCaption = $attrConfig.Element("RCDCs").Element("RCDC").Element("Caption").Value
 	$rcdcElement = Get-RcdcIdentityPicker -AttributeName $attrName -ObjectType $rcdcObjectType
 
 	$rcdc = Get-FimObject -Attribute DisplayName -Value $rcdcName -ObjectType ObjectVisualizationConfiguration
@@ -560,14 +567,14 @@ Function New-ObjectTypeConfiguration {
 
 	$xDoc = [XDocument]::Load($file)
 	$panel = [XElement] $xDoc.Root.Element($ns + "Panel")
-	$grouping = [XElement] ($panel.Elements($ns+"Grouping") | Where { $_.Attribute($ns + "Name").Value -eq "BasicInfo" } | Select -index 0)
+	$grouping = [XElement] ($panel.Elements($ns + "Grouping") | Where { $_.Attribute($ns + "Name").Value -eq "$rcdcGrouping" } | Select -index 0)
 
 	if($grouping -eq $null) {
 		$grouping = New-Object XElement ($ns + "Grouping")
-		$grouping.Add((New-Object XAttribute ($ns+"Name"), $name))
-		$grouping.Add((New-Object XAttribute ($ns+"Caption"), $caption))
-		$grouping.Add((New-Object XAttribute ($ns+"Enabled"), $true))
-		$grouping.Add((New-Object XAttribute ($ns+"Visible"), $true))
+		$grouping.Add((New-Object XAttribute ($ns + "Name"), $rcdcGrouping))
+		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $rcdcCaption))
+		$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
+		$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
 		$grouping.Add($rcdcElement)
 		$panel.Add($grouping)
 	} else {
@@ -643,6 +650,18 @@ Function Get-RcdcIdentityPicker {
 		$ObjectType,
 
 		[Parameter(Mandatory=$False)] 
+		[String]
+		$ListViewTitle = "ListViewTitle",
+
+		[Parameter(Mandatory=$False)] 
+		[String]
+		$PreviewTitle = "PreviewTitle",
+
+		[Parameter(Mandatory=$False)] 
+		[String]
+		$MainSearchScreenText = "MainSearchScreenText",
+
+		[Parameter(Mandatory=$False)] 
 		[XNameSpace]
 		$Ns = "http://schemas.microsoft.com/2006/11/ResourceManagement"
 	)
@@ -678,7 +697,7 @@ Function Get-RcdcIdentityPicker {
 
 	$property = New-Object XElement ($Ns + "Property")
 	$property.Add((New-Object XAttribute ($Ns+"Name"), "UsageKeywords"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "Department"))
+	$property.Add((New-Object XAttribute ($Ns+"Value"), $ObjectType))
 	$properties.Add($property)
 
 	$property = New-Object XElement ($Ns + "Property")
@@ -693,17 +712,17 @@ Function Get-RcdcIdentityPicker {
 
 	$property = New-Object XElement ($Ns + "Property")
 	$property.Add((New-Object XAttribute ($Ns+"Name"), "ListViewTitle"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "ListViewTitle"))
+	$property.Add((New-Object XAttribute ($Ns+"Value"), $ListViewTitle))
 	$properties.Add($property)
 
 	$property = New-Object XElement ($Ns + "Property")
 	$property.Add((New-Object XAttribute ($Ns+"Name"), "PreviewTitle"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "PreviewTitle"))
+	$property.Add((New-Object XAttribute ($Ns+"Value"), $PreviewTitle))
 	$properties.Add($property)
 
 	$property = New-Object XElement ($Ns + "Property")
 	$property.Add((New-Object XAttribute ($Ns+"Name"), "MainSearchScreenText"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "MainSearchScreenText"))
+	$property.Add((New-Object XAttribute ($Ns+"Value"), $MainSearchScreenText))
 	$properties.Add($property)
 
 	$element.Add($properties)
