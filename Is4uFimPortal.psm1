@@ -912,7 +912,7 @@ Function Add-AttributeToFilterScope {
 	if($AttributeId -eq $null) {
 		$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
 	} else {
-		$attrId = $AttributeId
+		$attrId = $AttributeId.Value
 	}
 	if($attrId -eq "") {
 		Throw "No attribute specified"
