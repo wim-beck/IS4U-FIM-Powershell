@@ -133,6 +133,26 @@ Function Get-GroupMemberships {
 	}
 }
 
+Function Get-GroupMembers {
+<#
+	.SYNOPSIS
+	List all members of the given group.
+
+	.DESCRIPTION
+	List all members of the given group.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ObjectID
+	)
+	$users = Export-FIMConfig -CustomConfig "/Person[ObjectID=/Group[ObjectID='$ObjectID']/ComputedMember or ObjectID=/Group[ObjectID='$ObjectID']/ExplicitMember]" -OnlyBaseResources
+	foreach($u in $users) {
+		$user = Convert-FIMExportToPSObject $u
+		Write-Host $user.DisplayName
+	}
+}
+
 Function Remove-ObjectsFromPortal {
 <#
 	.SYNOPSIS
