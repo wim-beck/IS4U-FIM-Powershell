@@ -133,7 +133,7 @@ Function Get-GroupMemberships {
 	}
 }
 
-Function Get-GroupMembers {
+Function Get-Members {
 <#
 	.SYNOPSIS
 	List all members of the given group.
