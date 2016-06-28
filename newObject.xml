@@ -54,7 +54,7 @@
 				<RCDC DisplayName="Configuration for User Editing">
 					<Grouping>BasicInfo</Grouping>
 					<Caption>General</Caption>
-					<Object>Person</Object>
+					<Object>Department</Object>
 				</RCDC>
 			</RCDCs>
 		</Attribute>
