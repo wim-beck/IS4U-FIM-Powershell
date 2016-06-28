@@ -133,6 +133,58 @@ Function Get-GroupMemberships {
 	}
 }
 
+Function Add-ObjectToGroup {
+<#
+	.SYNOPSIS
+	Add an object to the explicit members of a group.
+
+	.DESCRIPTION
+	Add an object to the explicit members of a group.
+
+	.EXAMPLE
+	Add-ObjectToGroup -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+		
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ObjectId
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
+	New-FimImportObject -ObjectType Group -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+}
+
+Function Remove-ObjectFromGroup {
+<#
+	.SYNOPSIS
+	Remove an object from the explicit members of a group.
+
+	.DESCRIPTION
+	Remove an object from the explicit members of a group.
+
+	.EXAMPLE
+	Remove-ObjectFromGroup -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+		
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ObjectId
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'Delete' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
+	New-FimImportObject -ObjectType Group -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+}
+
 Function Get-Members {
 <#
 	.SYNOPSIS
@@ -667,6 +719,32 @@ Function Add-ObjectToSet {
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
+	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+}
+
+Function Remove-ObjectFromSet {
+<#
+	.SYNOPSIS
+	Remove an object from the explicit members of a set.
+
+	.DESCRIPTION
+	Remove an object from the explicit members of a set.
+
+	.EXAMPLE
+	Remove-ObjectFromSet -DisplayName Administrators -ObjectId 7fb2b853-24f0-4498-9534-4e10589723c4
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$DisplayName,
+		
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ObjectId
+	)
+	$anchor = @{'DisplayName' = $DisplayName}
+	$changes = @()
+	$changes += New-FimImportChange -Operation 'Delete' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
 	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
 }
 
