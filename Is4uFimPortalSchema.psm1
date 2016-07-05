@@ -628,104 +628,28 @@ Function New-ObjectTypeConfiguration {
 		Write-Host "Create navigation bar '$navBarDisplayName'"
 		New-NavigationBar -DisplayName $navBarDisplayName -Order $navBarOrder -ParentOrder $navBarParentOrder -ObjectType $objectName -UsageKeyWords $navBarKeywords
 	}
+	
+	#-------------------------------
+	Write-Host "Create RCDC configurations for $objectName"
+	#-------------------------------
+	$rcdcCreate = Get-DefaultRcdc -Caption "Create $objectName" -Xml "defaultCreateRcdc.xml"
+	New-Rcdc -DisplayName "Configuration for $objectName Creation" -TargetObjectType $objectName -ConfigurationData $rcdcCreate.ToString() -AppliesToCreate
+	$rcdcEdit = Get-DefaultRcdc -Caption "Edit $objectName" -Xml "defaultEditRcdc.xml"
+	New-Rcdc -DisplayName "Configuration for $objectName Editing" -TargetObjectType $objectName -ConfigurationData $rcdcEdit.ToString() -AppliesToEdit
+	$rcdcView = Get-DefaultRcdc -Caption "View $objectName" -Xml "defaultViewRcdc.xml"
+	New-Rcdc -DisplayName "Configuration for $objectName Editing" -TargetObjectType $objectName -ConfigurationData $rcdcView.ToString() -AppliesToView
 }
 
-Function Get-RcdcIdentityPicker {
-<#
-	.SYNOPSIS
-	Create an XElement configuration for an RCDC Identity Picker.
-
-	.DESCRIPTION
-	
-	.EXAMPLE
-	Get-RcdcIdentityPicker -AttributeName DepartmentReference -ObjectType Person
-#>
-	param(
-		[Parameter(Mandatory=$True)] 
-		[String]
-		$AttributeName,
-
-		[Parameter(Mandatory=$True)] 
-		[String]
-		$ObjectType,
-
-		[Parameter(Mandatory=$False)] 
-		[String]
-		$ListViewTitle = "ListViewTitle",
-
-		[Parameter(Mandatory=$False)] 
-		[String]
-		$PreviewTitle = "PreviewTitle",
-
-		[Parameter(Mandatory=$False)] 
-		[String]
-		$MainSearchScreenText = "MainSearchScreenText",
-
-		[Parameter(Mandatory=$False)] 
-		[XNameSpace]
-		$Ns = "http://schemas.microsoft.com/2006/11/ResourceManagement"
-	)
-	
-	$element = New-Object XElement ($Ns + "Control")
-	$element.Add((New-Object XAttribute ($Ns+"Name"), $AttributeName))
-	$element.Add((New-Object XAttribute ($Ns+"TypeName"), "UocIdentityPicker"))
-	$element.Add((New-Object XAttribute ($Ns+"Caption"), "{Binding Source=schema, Path=$AttributeName.DisplayName}"))
-	$element.Add((New-Object XAttribute ($Ns+"Description"), "{Binding Source=schema, Path=$AttributeName.Description}"))
-	$element.Add((New-Object XAttribute ($Ns+"RightsLevel"), "{Binding Source=rights, Path=$AttributeName}"))
-
-	$properties = New-Object XElement ($Ns + "Properties")
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "Required"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "{Binding Source=schema, Path=$AttributeName.Required}"))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "Mode"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "SingleResult"))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "ObjectTypes"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $ObjectType))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "ColumnsToDisplay"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "DisplayName, Description"))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "UsageKeywords"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $ObjectType))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "ResultObjectType"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $ObjectType))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "Value"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "{Binding Source=object, Path=$AttributeName, Mode=TwoWay}"))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "ListViewTitle"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $ListViewTitle))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "PreviewTitle"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $PreviewTitle))
-	$properties.Add($property)
-
-	$property = New-Object XElement ($Ns + "Property")
-	$property.Add((New-Object XAttribute ($Ns+"Name"), "MainSearchScreenText"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), $MainSearchScreenText))
-	$properties.Add($property)
-
-	$element.Add($properties)
-
-	return $element
-}
+Export-ModuleMember New-Attribute
+Export-ModuleMember Update-Attribute
+Export-ModuleMember Remove-Attribute
+Export-ModuleMember New-Binding
+Export-ModuleMember Update-Binding
+Export-ModuleMember Remove-Binding
+Export-ModuleMember New-AttributeAndBinding
+Export-ModuleMember Remove-AttributeAndBinding
+Export-ModuleMember Import-SchemaExtensions
+Export-ModuleMember New-ObjectType
+Export-ModuleMember Update-ObjectType
+Export-ModuleMember Remove-ObjectType
+Export-ModuleMember New-ObjectTypeConfiguration
