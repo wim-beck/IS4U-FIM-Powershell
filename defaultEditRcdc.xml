@@ -8,7 +8,7 @@
   <my:XmlDataSource my:Name="summaryTransformXsl" my:Parameters="Microsoft.IdentityManagement.WebUI.Controls.Resources.DefaultSummary.xsl" />
   <my:Panel my:Name="page" my:AutoValidate="true" my:Caption="Default Configuration">
     <my:Grouping my:Name="_caption" my:IsHeader="true" my:Caption="Caption">
-      <my:Control my:Name="_caption" my:TypeName="UocCaptionControl" my:ExpandArea="true" my:Caption="Edit Department" my:Description="{Binding Source=object, Path=DisplayName}">
+      <my:Control my:Name="_caption" my:TypeName="UocCaptionControl" my:ExpandArea="true" my:Caption="" my:Description="{Binding Source=object, Path=DisplayName}">
         <my:Properties>
           <my:Property my:Name="MaxHeight" my:Value="32" />
           <my:Property my:Name="MaxWidth" my:Value="32" />
