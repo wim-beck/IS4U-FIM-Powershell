@@ -292,3 +292,33 @@ Function Set-WmiPermission {
 		}
 	}
 }
+
+Function Restart-MimAppPool {
+<#
+	.SYNOPSIS
+	Restarts the MIM Portal application pool.
+
+	.DESCRIPTION
+	Restarts the MIM Portal application pool.
+
+	.EXAMPLE
+	Restart-MimAppPool -Site "MIM Portal"
+#>
+	param( 
+		[Parameter(Mandatory=$False)]
+		[String]
+		$Site = "MIM Portal"
+	)
+	# Load IIS module:
+	Import-Module WebAdministration
+	# Get pool name by the site name:
+	$pool = (Get-Item "IIS:\Sites\$Site" | Select-Object applicationPool).applicationPool
+	# Recycle the application pool:
+	Restart-WebAppPool $pool
+}
+
+Export-ModuleMember Start-Is4uFimSchedule
+Export-ModuleMember Get-FimStatus
+Export-ModuleMember Set-DcomPermission
+Export-ModuleMember Set-WmiPermission
+Export-ModuleMember Restart-MimAppPool
