@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Copyright (c) Microsoft Corporation.  All rights reserved.-->
+<my:ObjectControlConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:my="http://schemas.microsoft.com/2006/11/ResourceManagement" xmlns:xd="http://schemas.microsoft.com/office/infopath/2003">
+  <my:ObjectDataSource my:TypeName="PrimaryResourceObjectDataSource" my:Name="object" />
+  <my:ObjectDataSource my:TypeName="PrimaryResourceDeltaDataSource" my:Name="delta" />
+  <my:ObjectDataSource my:TypeName="PrimaryResourceRightsDataSource" my:Name="rights" />
+  <my:ObjectDataSource my:TypeName="SchemaDataSource" my:Name="schema" />
+  <my:XmlDataSource my:Name="summaryTransformXsl" my:Parameters="Microsoft.IdentityManagement.WebUI.Controls.Resources.DefaultSummary.xsl" />
+  <my:Panel my:Name="page" my:AutoValidate="true" my:Caption="Default Configuration">
+    <my:Grouping my:Name="_caption" my:IsHeader="true" my:Caption="Caption">
+      <my:Control my:Name="_caption" my:TypeName="UocCaptionControl" my:ExpandArea="true" my:Caption="Create Department" my:Description="">
+        <my:Properties>
+          <my:Property my:Name="MaxHeight" my:Value="32" />
+          <my:Property my:Name="MaxWidth" my:Value="32" />
+        </my:Properties>
+      </my:Control>
+    </my:Grouping>
+    <my:Grouping my:Name="commonAttributes" my:Caption="Common Attributes">
+      <my:Control my:Name="DisplayName" my:TypeName="UocTextBox" my:Caption="{Binding Source=schema, Path=DisplayName.DisplayName}" my:Description="{Binding Source=schema, Path=DisplayName.Description}" my:RightsLevel="{Binding Source=rights, Path=DisplayName}">
+        <my:Properties>
+          <my:Property my:Name="ReadOnly" my:Value="false" />
+          <my:Property my:Name="Required" my:Value="{Binding Source=schema, Path=DisplayName.Required}" />
+          <my:Property my:Name="Text" my:Value="{Binding Source=object, Path=DisplayName, Mode=TwoWay}" />
+          <my:Property my:Name="MaxLength" my:Value="400" />
+          <my:Property my:Name="RegularExpression" my:Value="{Binding Source=schema, Path=DisplayName.StringRegex}" />
+          <my:Property my:Name="Hint" my:Value="{Binding Source=schema, Path=DisplayName.Hint}" />
+        </my:Properties>
+      </my:Control>
+      <my:Control my:Name="Description" my:TypeName="UocTextBox" my:Caption="{Binding Source=schema, Path=Description.DisplayName}" my:Description="{Binding Source=schema, Path=Description.Description}" my:RightsLevel="{Binding Source=rights, Path=Description}">
+        <my:Properties>
+          <my:Property my:Name="ReadOnly" my:Value="false" />
+          <my:Property my:Name="Required" my:Value="{Binding Source=schema, Path=Description.Required}" />
+          <my:Property my:Name="Text" my:Value="{Binding Source=object, Path=Description, Mode=TwoWay}" />
+          <my:Property my:Name="MaxLength" my:Value="400" />
+          <my:Property my:Name="RegularExpression" my:Value="{Binding Source=schema, Path=Description.StringRegex}" />
+          <my:Property my:Name="Hint" my:Value="{Binding Source=schema, Path=Description.Hint}" />
+        </my:Properties>
+      </my:Control>
+    </my:Grouping>
+    <my:Grouping my:Name="summary" my:Caption="Summary" my:IsSummary="true">
+      <my:Control my:Name="summaryControl" my:TypeName="UocHtmlSummary" my:ExpandArea="true">
+        <my:Properties>
+          <my:Property my:Name="ModificationsXml" my:Value="{Binding Source=delta, Path=DeltaXml}" />
+          <my:Property my:Name="TransformXsl" my:Value="{Binding Source=summaryTransformXsl, Path=/}" />
+          <my:Property my:Name="Hint" my:Value="{Binding Source=schema, Path=%AttributeName%.Hint}" />
+        </my:Properties>
+      </my:Control>
+    </my:Grouping>
+  </my:Panel>
+</my:ObjectControlConfiguration>
