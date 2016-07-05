@@ -130,3 +130,7 @@ Function Install-LocalizedSspr {
 	}
 	Disable-Mpr "Anonymous users can reset their password"
 }
+
+Export-ModuleMember Enable-Sspr
+Export-ModuleMember Disable-Sspr
+Export-ModuleMember Install-LocalizedSspr

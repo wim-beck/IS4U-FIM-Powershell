@@ -100,3 +100,7 @@ Function Test-Port {
         Write-Host -ForegroundColor Red "`tPort $Port is not open on $Server."
     }
 }
+
+Export-ModuleMember Add-TypeAccelerators
+Export-ModuleMember Install-DllInGac
+Export-ModuleMember Test-Port
