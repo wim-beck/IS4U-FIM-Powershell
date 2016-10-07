@@ -10,7 +10,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-A full copy of the GNU General Public License can be found 
+A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
@@ -38,7 +38,7 @@ Function Add-TypeAccelerators {
 		[Parameter(Mandatory=$True)]
 		[String]
 		$AssemblyName,
-		
+
 		[Parameter(Mandatory=$True)]
 		[String]
 		$Class
@@ -101,6 +101,24 @@ Function Test-Port {
     }
 }
 
+Function Get-EncryptedPwd {
+<#
+	.SYNOPSIS
+	Get an encrypted password, convertable to secure string.
+
+	.DESCRIPTION
+	Get an encrypted password, convertable to secure string.
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Pwd
+	)
+	$secureString = ConvertTo-SecureString -AsPlainText -Force -String $Pwd
+	return ConvertFrom-SecureString $secureString
+}
+
 Export-ModuleMember Add-TypeAccelerators
 Export-ModuleMember Install-DllInGac
 Export-ModuleMember Test-Port
+Export-ModuleMember Get-EncryptedPwd
