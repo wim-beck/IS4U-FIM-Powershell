@@ -10,7 +10,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-A full copy of the GNU General Public License can be found 
+A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
@@ -55,8 +55,9 @@ Function New-Attribute {
 	$changes.Add("Description", $Description)
 	$changes.Add("DataType", $Type)
 	$changes.Add("Multivalued", $MultiValued)
-	New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow
-	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	$attr = New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow -PassThru
+	#[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	[UniqueIdentifier] $id = $attr.TargetObjectIdentifier
 	return $id
 }
 
@@ -130,15 +131,15 @@ Function New-Binding {
 		[Parameter(Mandatory=$True)]
 		[String]
 		$AttributeName,
-	
+
 		[Parameter(Mandatory=$True)]
 		[String]
-		$DisplayName, 
+		$DisplayName,
 
 		[Parameter(Mandatory=$False)]
 		[String]
-		$Description, 
-	
+		$Description,
+
 		[Parameter(Mandatory=$False)]
 		[String]
 		$Required = "False",
@@ -182,12 +183,12 @@ Function Update-Binding {
 
 		[Parameter(Mandatory=$True)]
 		[String]
-		$DisplayName, 
+		$DisplayName,
 
 		[Parameter(Mandatory=$False)]
 		[String]
-		$Description, 
-	
+		$Description,
+
 		[Parameter(Mandatory=$False)]
 		[String]
 		$Required = "False",
@@ -250,8 +251,8 @@ Function New-AttributeAndBinding {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$Name, 
-		
+		$Name,
+
 		[Parameter(Mandatory=$True)]
 		[String]
 		$DisplayName,
@@ -259,12 +260,12 @@ Function New-AttributeAndBinding {
 		[Parameter(Mandatory=$True)]
 		[String]
 		[ValidateScript({("String", "DateTime", "Integer", "Reference", "Boolean", "Text", "Binary") -contains $_})]
-		$Type, 
-		
+		$Type,
+
 		[Parameter(Mandatory=$False)]
 		[String]
 		$MultiValued = "False",
-		
+
 		[Parameter(Mandatory=$False)]
 		[String]
 		$ObjectType = "Person"
@@ -297,7 +298,7 @@ Function Remove-AttributeAndBinding {
 		[Parameter(Mandatory=$True)]
 		[String]
 		$Name,
-		
+
 		[Parameter(Mandatory=$False)]
 		[String]
 		$ObjectType = "Person"
@@ -427,7 +428,7 @@ Function New-ObjectTypeConfiguration {
 
 	.DESCRIPTION
 	Create a new object type based on the given config file.
-	This includes creating a new object type, a MPR, default attributes and bindings, 
+	This includes creating a new object type, a MPR, default attributes and bindings,
 	search scope, a navigation bar resource and configuring a synchronization fiter.
 
 	.EXAMPLE
@@ -442,7 +443,7 @@ Function New-ObjectTypeConfiguration {
 	$config = [XDocument]::Load((Join-Path $pwd $ConfigFile))
 	$root = [XElement] $config.Root
 	$objectConfig = [XElement] $root.Element("Object")
-	
+
 	#-------------------------------
 	Write-Host "Create object type"
 	#-------------------------------
@@ -525,7 +526,7 @@ Function New-ObjectTypeConfiguration {
 		Write-Host "Create attribute '$attrName'"
 		$attrId = New-Attribute -Name $attrName -DisplayName $attrDisplayName -Description $attrDescription -Type "Reference" -MultiValued $attrMultivalued
 	}
-	
+
 	#-------------------------------
 	Write-Host "Add reference attribute to MPR's"
 	#-------------------------------
@@ -536,7 +537,7 @@ Function New-ObjectTypeConfiguration {
 	#-------------------------------
 	Write-Host "Create bindings for the reference attribute"
 	#-------------------------------
-	foreach($bindingConfig in $attrConfig.Element("Bindings").Elements("Binding")) { 
+	foreach($bindingConfig in $attrConfig.Element("Bindings").Elements("Binding")) {
 		$bindingDisplayName = $bindingConfig.Attribute("DisplayName").Value
 		$bindingRequired = $bindingConfig.Attribute("Required").Value
 		$boundObjectType = $bindingConfig.Attribute("Object").Value
@@ -550,11 +551,11 @@ Function New-ObjectTypeConfiguration {
 		}
 	}
 
+	$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
 	#-------------------------------
-	Write-Host "Edit RCDC"
+	Write-Host "Edit RCDC $rcdcName"
 	#-------------------------------
 	$ns = [XNameSpace] "http://schemas.microsoft.com/2006/11/ResourceManagement"
-	$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
 	$rcdcObjectType = $attrConfig.Element("RCDCs").Element("RCDC").Element("Object").Value
 	$rcdcGrouping = $attrConfig.Element("RCDCs").Element("RCDC").Element("Grouping").Value
 	$rcdcCaption = $attrConfig.Element("RCDCs").Element("RCDC").Element("Caption").Value
@@ -562,7 +563,7 @@ Function New-ObjectTypeConfiguration {
 
 	$rcdc = Get-FimObject -Attribute DisplayName -Value $rcdcName -ObjectType ObjectVisualizationConfiguration
 	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$file = "$pwd/$date"+"_userEdit_before.xml"
+	$file = "$pwd/$date"+"_rcdcEdit_before.xml"
 	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
 
 	$xDoc = [XDocument]::Load($file)
@@ -580,10 +581,10 @@ Function New-ObjectTypeConfiguration {
 	} else {
 		$grouping.Add($rcdcElement)
 	}
-	
-	$exportFile = "$pwd/$date"+"_userEdit_after.xml"
+
+	$exportFile = "$pwd/$date"+"_rcdcEdit_after.xml"
 	$xDoc.Save($exportFile)
-	
+
 	$anchor = @{'DisplayName' = $rcdcName}
 	$changes = @{"ConfigurationData" = $xDoc.ToString()}
 	New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
@@ -628,7 +629,7 @@ Function New-ObjectTypeConfiguration {
 		Write-Host "Create navigation bar '$navBarDisplayName'"
 		New-NavigationBar -DisplayName $navBarDisplayName -Order $navBarOrder -ParentOrder $navBarParentOrder -ObjectType $objectName -UsageKeyWords $navBarKeywords
 	}
-	
+
 	#-------------------------------
 	Write-Host "Create RCDC configurations for $objectName"
 	#-------------------------------
@@ -637,7 +638,7 @@ Function New-ObjectTypeConfiguration {
 	$rcdcEdit = Get-DefaultRcdc -Caption "Edit $objectName" -Xml "defaultEditRcdc.xml"
 	New-Rcdc -DisplayName "Configuration for $objectName Editing" -TargetObjectType $objectName -ConfigurationData $rcdcEdit.ToString() -AppliesToEdit
 	$rcdcView = Get-DefaultRcdc -Caption "View $objectName" -Xml "defaultViewRcdc.xml"
-	New-Rcdc -DisplayName "Configuration for $objectName Editing" -TargetObjectType $objectName -ConfigurationData $rcdcView.ToString() -AppliesToView
+	New-Rcdc -DisplayName "Configuration for $objectName Viewing" -TargetObjectType $objectName -ConfigurationData $rcdcView.ToString() -AppliesToView
 }
 
 Export-ModuleMember New-Attribute
