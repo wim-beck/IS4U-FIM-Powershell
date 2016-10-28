@@ -15,6 +15,7 @@ here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
 Import-Module .\Is4uFimPortal.psm1
+Import-Module .\Is4uFimPortalRcdc.psm1
 
 Function New-Attribute {
 <#
@@ -55,8 +56,7 @@ Function New-Attribute {
 	$changes.Add("Description", $Description)
 	$changes.Add("DataType", $Type)
 	$changes.Add("Multivalued", $MultiValued)
-	$attr = New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow -PassThru
-	#[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	$attr = New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow -SkipDuplicateCheck -PassThru
 	[UniqueIdentifier] $id = $attr.TargetObjectIdentifier
 	return $id
 }
@@ -156,10 +156,9 @@ Function New-Binding {
 	$changes.Add("Description", $Description)
 	$changes.Add("BoundAttributeType", $attrId)
 	$changes.Add("BoundObjectType", $objId)
-	New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow
-	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
-	[UniqueIdentifier] $id = $binding.ObjectID
-	return $id.Value
+	$binding = New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow -SkipDuplicateCheck -PassThru
+	[UniqueIdentifier] $id = $binding.TargetObjectIdentifier
+	return $id
 }
 
 Function Update-Binding {
@@ -312,7 +311,7 @@ Function Remove-AttributeAndBinding {
 	Remove-Attribute -Name $Name
 }
 
-Function Import-SchemaExtensions {
+Function Import-SchemaAttributesAndBindings {
 <#
 	.SYNOPSIS
 	Create new attributes and bindings based on data in given CSV file.
@@ -321,7 +320,7 @@ Function Import-SchemaExtensions {
 	Create new attributes and bindings based on data in given CSV file.
 
 	.EXAMPLE
-	Import-SchemaExtensions -CsvFile ".\SchemaExtensions.csv"
+	Import-SchemaAttributesAndBindings -CsvFile ".\SchemaAttributesAndBindings.csv"
 #>
 	param(
 		[Parameter(Mandatory=$True)]
@@ -333,6 +332,29 @@ Function Import-SchemaExtensions {
 	$csv = Import-Csv $CsvFile
 	ForEach ($entry in $csv) {
 		New-AttributeAndBinding -Name $entry.SystemName -DisplayName $entry.DisplayName -Type $entry.DataType -MultiValued $entry.MultiValued -ObjectType $entry.ObjectType
+	}
+}
+
+Function Import-SchemaBindings {
+<#
+	.SYNOPSIS
+	Create new bindings based on data in given CSV file.
+	
+	.DESCRIPTION
+	Create new bindings based on data in given CSV file.
+	All referenced attributes are assumed to exist already in the schema.
+
+	.EXAMPLE
+	Import-SchemaBindings -CsvFile ".\SchemaBindings.csv"
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$CsvFile
+	)
+	$csv = Import-Csv $CsvFile
+	ForEach ($entry in $csv) {
+		New-Binding -AttributeName $entry.SystemName -DisplayName $entry.DisplayName -ObjectType $entry.ObjectType
 	}
 }
 
@@ -508,86 +530,88 @@ Function New-ObjectTypeConfiguration {
 			New-Mpr -DisplayName $mprDisplayName -PrincipalSetId $mprRequestors -SetId $setId -ActionType $mprActions -ActionParameter $mprAttr -GrantRight $mprGrant -ManagementPolicyRuleType $mprType -Description $mprDescription -Disabled $mprDisabled
 		}
 	}
-
-	#-------------------------------
-	Write-Host "Create the reference attribute"
-	#-------------------------------
-	[UniqueIdentifier] $attrId = [Guid]::Empty
+	
 	$attrConfig = $objectConfig.Element("Attribute")
-	$attrName = $attrConfig.Attribute("SystemName").Value
-	$attrDisplayName = $attrConfig.Attribute("DisplayName").Value
-	$attrDescription = $attrConfig.Attribute("Description").Value
-	$attrMultivalued = $attrConfig.Element("Multivalued").Value
-	$attrExists = Test-ObjectExists -Value $attrName -Attribute Name -ObjectType AttributeTypeDescription
-	if($attrExists) {
-		Write-Host "Update existing attribute '$attrName'"
-		$attrId = Update-Attribute -Name $attrName -DisplayName $attrDisplayName -Description $attrDescription
-	} else {
-		Write-Host "Create attribute '$attrName'"
-		$attrId = New-Attribute -Name $attrName -DisplayName $attrDisplayName -Description $attrDescription -Type "Reference" -MultiValued $attrMultivalued
-	}
-
-	#-------------------------------
-	Write-Host "Add reference attribute to MPR's"
-	#-------------------------------
-	foreach($mprConfig in $attrConfig.Element("Policy").Elements("MPR")) {
-		Add-AttributeToMPR -AttrName $attrName -MprName $mprConfig.Element("DisplayName").Value
-	}
-
-	#-------------------------------
-	Write-Host "Create bindings for the reference attribute"
-	#-------------------------------
-	foreach($bindingConfig in $attrConfig.Element("Bindings").Elements("Binding")) {
-		$bindingDisplayName = $bindingConfig.Attribute("DisplayName").Value
-		$bindingRequired = $bindingConfig.Attribute("Required").Value
-		$boundObjectType = $bindingConfig.Attribute("Object").Value
-		$bindingExists = Test-ObjectExists -Value $bindingDisplayName -Attribute DisplayName -ObjectType BindingDescription
-		if($bindingExists) {
-			Write-Host "Update existing binding '$bindingDisplayName'"
-			Update-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
+	if($attrConfig) {
+		#-------------------------------
+		Write-Host "Create the reference attribute"
+		#-------------------------------
+		[UniqueIdentifier] $attrId = [Guid]::Empty
+		$attrName = $attrConfig.Attribute("SystemName").Value
+		$attrDisplayName = $attrConfig.Attribute("DisplayName").Value
+		$attrDescription = $attrConfig.Attribute("Description").Value
+		$attrMultivalued = $attrConfig.Element("Multivalued").Value
+		$attrExists = Test-ObjectExists -Value $attrName -Attribute Name -ObjectType AttributeTypeDescription
+		if($attrExists) {
+			Write-Host "Update existing attribute '$attrName'"
+			$attrId = Update-Attribute -Name $attrName -DisplayName $attrDisplayName -Description $attrDescription
 		} else {
-			Write-Host "Create binding '$bindingDisplayName'"
-			New-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
+			Write-Host "Create attribute '$attrName'"
+			$attrId = New-Attribute -Name $attrName -DisplayName $attrDisplayName -Description $attrDescription -Type "Reference" -MultiValued $attrMultivalued
 		}
+
+		#-------------------------------
+		Write-Host "Add reference attribute to MPR's"
+		#-------------------------------
+		foreach($mprConfig in $attrConfig.Element("Policy").Elements("MPR")) {
+			Add-AttributeToMPR -AttrName $attrName -MprName $mprConfig.Element("DisplayName").Value
+		}
+
+		#-------------------------------
+		Write-Host "Create bindings for the reference attribute"
+		#-------------------------------
+		foreach($bindingConfig in $attrConfig.Element("Bindings").Elements("Binding")) {
+			$bindingDisplayName = $bindingConfig.Attribute("DisplayName").Value
+			$bindingRequired = $bindingConfig.Attribute("Required").Value
+			$boundObjectType = $bindingConfig.Attribute("Object").Value
+			$bindingExists = Test-ObjectExists -Value $bindingDisplayName -Attribute DisplayName -ObjectType BindingDescription
+			if($bindingExists) {
+				Write-Host "Update existing binding '$bindingDisplayName'"
+				Update-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
+			} else {
+				Write-Host "Create binding '$bindingDisplayName'"
+				New-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
+			}
+		}
+
+		$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
+		#-------------------------------
+		Write-Host "Edit RCDC $rcdcName"
+		#-------------------------------
+		$ns = [XNameSpace] "http://schemas.microsoft.com/2006/11/ResourceManagement"
+		$rcdcObjectType = $attrConfig.Element("RCDCs").Element("RCDC").Element("Object").Value
+		$rcdcGrouping = $attrConfig.Element("RCDCs").Element("RCDC").Element("Grouping").Value
+		$rcdcCaption = $attrConfig.Element("RCDCs").Element("RCDC").Element("Caption").Value
+		$rcdcElement = Get-RcdcIdentityPicker -AttributeName $attrName -ObjectType $rcdcObjectType
+
+		$rcdc = Get-FimObject -Attribute DisplayName -Value $rcdcName -ObjectType ObjectVisualizationConfiguration
+		$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
+		$file = "$pwd/$date" + "_" + $rcdcName + "_before.xml"
+		Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
+
+		$xDoc = [XDocument]::Load($file)
+		$panel = [XElement] $xDoc.Root.Element($ns + "Panel")
+		$grouping = [XElement] ($panel.Elements($ns + "Grouping") | Where { $_.Attribute($ns + "Name").Value -eq $rcdcGrouping } | Select -index 0)
+
+		if($grouping -eq $null) {
+			$grouping = New-Object XElement ($ns + "Grouping")
+			$grouping.Add((New-Object XAttribute ($ns + "Name"), $rcdcGrouping))
+			$grouping.Add((New-Object XAttribute ($ns + "Caption"), $rcdcCaption))
+			$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
+			$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
+			$grouping.Add($rcdcElement)
+			$panel.Add($grouping)
+		} else {
+			$grouping.Add($rcdcElement)
+		}
+
+		$file = "$pwd/$date" + "_" + $rcdcName + "_after.xml"
+		$xDoc.Save($exportFile)
+
+		$anchor = @{'DisplayName' = $rcdcName}
+		$changes = @{"ConfigurationData" = $xDoc.ToString()}
+		New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	}
-
-	$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
-	#-------------------------------
-	Write-Host "Edit RCDC $rcdcName"
-	#-------------------------------
-	$ns = [XNameSpace] "http://schemas.microsoft.com/2006/11/ResourceManagement"
-	$rcdcObjectType = $attrConfig.Element("RCDCs").Element("RCDC").Element("Object").Value
-	$rcdcGrouping = $attrConfig.Element("RCDCs").Element("RCDC").Element("Grouping").Value
-	$rcdcCaption = $attrConfig.Element("RCDCs").Element("RCDC").Element("Caption").Value
-	$rcdcElement = Get-RcdcIdentityPicker -AttributeName $attrName -ObjectType $rcdcObjectType
-
-	$rcdc = Get-FimObject -Attribute DisplayName -Value $rcdcName -ObjectType ObjectVisualizationConfiguration
-	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$file = "$pwd/$date"+"_rcdcEdit_before.xml"
-	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
-
-	$xDoc = [XDocument]::Load($file)
-	$panel = [XElement] $xDoc.Root.Element($ns + "Panel")
-	$grouping = [XElement] ($panel.Elements($ns + "Grouping") | Where { $_.Attribute($ns + "Name").Value -eq "$rcdcGrouping" } | Select -index 0)
-
-	if($grouping -eq $null) {
-		$grouping = New-Object XElement ($ns + "Grouping")
-		$grouping.Add((New-Object XAttribute ($ns + "Name"), $rcdcGrouping))
-		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $rcdcCaption))
-		$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
-		$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
-		$grouping.Add($rcdcElement)
-		$panel.Add($grouping)
-	} else {
-		$grouping.Add($rcdcElement)
-	}
-
-	$exportFile = "$pwd/$date"+"_rcdcEdit_after.xml"
-	$xDoc.Save($exportFile)
-
-	$anchor = @{'DisplayName' = $rcdcName}
-	$changes = @{"ConfigurationData" = $xDoc.ToString()}
-	New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 
 	#-------------------------------
 	Write-Host "Create search scope"
@@ -604,10 +628,10 @@ Function New-ObjectTypeConfiguration {
 	$searchScopeExists = Test-ObjectExists -Value $searchScopeDisplayName -Attribute DisplayName -ObjectType SearchScopeConfiguration
 	if($searchScopeExists) {
 		Write-Host "Update existing search scope '$searchScopeDisplayName'"
-		Update-SearchScope -DisplayName $searchScopeDisplayName -Order $searchScopeOrder -ObjectType $objectName -AttributeName $attrName -Context $searchScopeContext -Column $searchScopeColumn -UsageKeyWords $searchScopeKeywords
+		Update-SearchScope -DisplayName $searchScopeDisplayName -Order $searchScopeOrder -ObjectType $objectName -Context $searchScopeContext -Column $searchScopeColumn -UsageKeyWords $searchScopeKeywords
 	} else {
 		Write-Host "Create search scope '$searchScopeDisplayName'"
-		New-SearchScope -DisplayName $searchScopeDisplayName -Order $searchScopeOrder -ObjectType $objectName -AttributeName $attrName -Context $searchScopeContext -Column $searchScopeColumn -UsageKeyWords $searchScopeKeywords
+		New-SearchScope -DisplayName $searchScopeDisplayName -Order $searchScopeOrder -ObjectType $objectName -Context $searchScopeContext -Column $searchScopeColumn -UsageKeyWords $searchScopeKeywords
 	}
 
 	#-------------------------------
@@ -649,7 +673,8 @@ Export-ModuleMember Update-Binding
 Export-ModuleMember Remove-Binding
 Export-ModuleMember New-AttributeAndBinding
 Export-ModuleMember Remove-AttributeAndBinding
-Export-ModuleMember Import-SchemaExtensions
+Export-ModuleMember Import-SchemaAttributesAndBindings
+Export-ModuleMember Import-SchemaBindings
 Export-ModuleMember New-ObjectType
 Export-ModuleMember Update-ObjectType
 Export-ModuleMember Remove-ObjectType
