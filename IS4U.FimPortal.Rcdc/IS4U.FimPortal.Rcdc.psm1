@@ -188,7 +188,11 @@ Function Add-ElementToRcdc {
 		$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
 		$grouping.Add($RcdcElement)
 		$summary = [XElement] ($panel.Elements($Ns + "Grouping") | Where { $_.Attribute($Ns + "IsSummary").Value -eq "true" } | Select -index 0)
-		$summary.AddBeforeSelf($grouping)
+		if($summary -eq $null) {
+			$panel.Add($grouping)
+		} else {
+			$summary.AddBeforeSelf($grouping)
+		}
 	} else {
 		$grouping.Add($RcdcElement)
 	}
