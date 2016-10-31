@@ -1,5 +1,5 @@
 <#
-Copyright (C) 2015 by IS4U (info@is4u.be)
+Copyright (C) 2016 by IS4U (info@is4u.be)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -293,13 +293,13 @@ Function Set-WmiPermission {
 	}
 }
 
-Function Restart-MimAppPool {
+Function Restart-ApplicationPool {
 <#
 	.SYNOPSIS
-	Restarts the MIM Portal application pool.
+	Restarts the (MIM Portal) application pool.
 
 	.DESCRIPTION
-	Restarts the MIM Portal application pool.
+	Restarts the (MIM Portal) application pool.
 
 	.EXAMPLE
 	Restart-MimAppPool -Site "MIM Portal"
@@ -311,14 +311,14 @@ Function Restart-MimAppPool {
 	)
 	# Load IIS module:
 	Import-Module WebAdministration
-	# Get pool name by the site name:
-	$pool = (Get-Item "IIS:\Sites\$Site" | Select-Object applicationPool).applicationPool
-	# Recycle the application pool:
-	Restart-WebAppPool $pool
+	$currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
+	$admin = $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+	if($admin -eq $false) {
+		Write-Warning "Elevated prompt required"
+	} else {
+		# Get pool name by the site name:
+		$pool = (Get-Item "IIS:\Sites\$Site" | Select-Object applicationPool).applicationPool
+		# Recycle the application pool:
+		Restart-WebAppPool $pool
+	}
 }
-
-Export-ModuleMember Start-Is4uFimSchedule
-Export-ModuleMember Get-FimStatus
-Export-ModuleMember Set-DcomPermission
-Export-ModuleMember Set-WmiPermission
-Export-ModuleMember Restart-MimAppPool

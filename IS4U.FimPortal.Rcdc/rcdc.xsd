@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xsd:schema targetNamespace="http://schemas.microsoft.com/2006/11/ResourceManagement" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:my="http://schemas.microsoft.com/2006/11/ResourceManagement" xmlns:xd="http://schemas.microsoft.com/office/infopath/2003" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:attribute name="TypeName" type="my:requiredString"/>
+  <xsd:attribute name="Name" type="my:requiredAlphanumericString"/>
+  <xsd:attribute name="Parameters" type="xsd:string"/>
+  <xsd:attribute name="DisplayAsWizard" type="xsd:boolean"/>
+  <xsd:attribute name="Caption" type="xsd:string"/>
+  <xsd:attribute name="AutoValidate" type="xsd:boolean"/>
+  <xsd:attribute name="Enabled" type="xsd:string"/>
+  <xsd:attribute name="Visible" type="xsd:string"/>
+  <xsd:attribute name="IsSummary" type="xsd:boolean"/>
+  <xsd:attribute name="IsHeader" type="xsd:boolean"/>
+  <xsd:attribute name="HelpText" type="xsd:string"/>
+  <xsd:attribute name="Link" type="xsd:string"/>
+  <xsd:attribute name="Description" type="xsd:string"/>
+  <xsd:attribute name="ExpandArea" type="xsd:boolean"/>
+  <xsd:attribute name="Hint" type="xsd:string"/>
+  <xsd:attribute name="AutoPostback" type="xsd:string"/>
+  <xsd:attribute name="RightsLevel" type="my:requiredString"/>
+  <xsd:attribute name="Value" type="xsd:string"/>
+  <xsd:attribute name="Handler" type="my:requiredString"/>
+  <xsd:attribute name="ImageUrl" type="xsd:string"/>
+  <xsd:attribute name="RedirectUrl" type="xsd:string"/>
+  <xsd:attribute name="ClickBehavior" type="xsd:string"/>
+  <xsd:attribute name="EnableMode" type="xsd:string"/>
+  <xsd:attribute name="ValueType" type="xsd:string"/>
+  <xsd:element name="ObjectControlConfiguration">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:ObjectDataSource" minOccurs="0" maxOccurs="32"/>
+		  <xsd:element ref="my:XmlDataSource" minOccurs="0" maxOccurs="32"/>
+		  <xsd:element ref="my:Panel"/>
+		  <xsd:element ref="my:Events" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:TypeName"/>
+		<xsd:anyAttribute processContents="lax" namespace="http://www.w3.org/XML/1998/namespace"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="ObjectDataSource">
+	 <xsd:complexType>
+		<xsd:sequence/>
+		<xsd:attribute ref="my:TypeName"/>
+		<xsd:attribute ref="my:Name"/>
+		<xsd:attribute ref="my:Parameters"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="XmlDataSource">
+	 <xsd:complexType  mixed="true">
+		<xsd:sequence>
+		  <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:Name"/>
+		<xsd:attribute ref="my:Parameters"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Panel">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Grouping" minOccurs="1" maxOccurs="16"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:Name"/>
+		<xsd:attribute ref="my:DisplayAsWizard"/>
+		<xsd:attribute ref="my:Caption"/>
+		<xsd:attribute ref="my:AutoValidate"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Grouping">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Help" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:Control" minOccurs="1" maxOccurs="256"/>
+		  <xsd:element ref="my:Events" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:Name"/>
+		<xsd:attribute ref="my:Caption"/>
+		<xsd:attribute ref="my:Description"/>
+		<xsd:attribute ref="my:Enabled"/>
+		<xsd:attribute ref="my:Visible"/>
+		<xsd:attribute ref="my:IsHeader"/>
+		<xsd:attribute ref="my:IsSummary"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Help">
+	 <xsd:complexType>
+		<xsd:sequence/>
+		<xsd:attribute ref="my:HelpText"/>
+		<xsd:attribute ref="my:Link"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Control">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Help" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:CustomProperties" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:Options" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:Buttons" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:Properties" minOccurs="0"  maxOccurs="1"/>
+		  <xsd:element ref="my:Events" minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:Name"/>
+		<xsd:attribute ref="my:TypeName"/>
+		<xsd:attribute ref="my:Caption"/>
+		<xsd:attribute ref="my:Enabled"/>
+		<xsd:attribute ref="my:Visible"/>
+		<xsd:attribute ref="my:Description"/>
+		<xsd:attribute ref="my:ExpandArea"/>
+		<xsd:attribute ref="my:Hint"/>
+		<xsd:attribute ref="my:AutoPostback"/>
+		<xsd:attribute ref="my:RightsLevel"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="CustomProperties">
+	 <xsd:complexType mixed="true">
+		<xsd:sequence>
+		  <xsd:any minOccurs="0" maxOccurs="unbounded" namespace="##targetNamespace" processContents="lax"/>
+		</xsd:sequence>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Options">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Option" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute ref="my:ValueType"/>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Option">
+	 <xsd:complexType>
+		<xsd:simpleContent>
+		  <xsd:extension base="xsd:string">
+			 <xsd:attribute ref="my:Value"/>
+			 <xsd:attribute ref="my:Caption"/>
+			 <xsd:attribute ref="my:Hint"/>
+		  </xsd:extension>
+		</xsd:simpleContent>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Buttons">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Button" minOccurs="1" maxOccurs="8"/>
+		</xsd:sequence>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Button">
+	 <xsd:complexType>
+		<xsd:simpleContent>
+		  <xsd:extension base="xsd:string">
+			 <xsd:attribute ref="my:Name"/>
+			 <xsd:attribute ref="my:Caption"/>
+			 <xsd:attribute ref="my:Hint"/>
+			 <xsd:attribute ref="my:ImageUrl"/>
+			 <xsd:attribute ref="my:ClickBehavior"/>
+			 <xsd:attribute ref="my:RedirectUrl"/>
+			 <xsd:attribute ref="my:Enabled"/>
+			 <xsd:attribute ref="my:Visible"/>
+			 <xsd:attribute ref="my:EnableMode"/>
+		  </xsd:extension>
+		</xsd:simpleContent>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Properties">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Property" minOccurs="1" maxOccurs="32"/>
+		</xsd:sequence>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Property">
+	 <xsd:complexType>
+		<xsd:simpleContent>
+		  <xsd:extension base="xsd:string">
+			 <xsd:attribute ref="my:Name"/>
+			 <xsd:attribute ref="my:Value"/>
+		  </xsd:extension>
+		</xsd:simpleContent>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Events">
+	 <xsd:complexType>
+		<xsd:sequence>
+		  <xsd:element ref="my:Event" minOccurs="1" maxOccurs="16"/>
+		</xsd:sequence>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="Event">
+	 <xsd:complexType>
+		<xsd:simpleContent>
+		  <xsd:extension base="xsd:string">
+			 <xsd:attribute ref="my:Name"/>
+			 <xsd:attribute ref="my:Handler"/>
+		  </xsd:extension>
+		</xsd:simpleContent>
+	 </xsd:complexType>
+  </xsd:element>
+  <xsd:simpleType name="requiredString">
+	 <xsd:restriction base="xsd:string">
+		<xsd:minLength value="1"/>
+	 </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="requiredAlphanumericString">
+	 <xsd:restriction base="xsd:string">
+		<xsd:pattern value="[A-Za-z0-9_]{1,128}"/>
+	 </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="requiredAnyURI">
+	 <xsd:restriction base="xsd:anyURI">
+		<xsd:minLength value="1"/>
+	 </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="requiredBase64Binary">
+	 <xsd:restriction base="xsd:base64Binary">
+		<xsd:minLength value="1"/>
+	 </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>
+

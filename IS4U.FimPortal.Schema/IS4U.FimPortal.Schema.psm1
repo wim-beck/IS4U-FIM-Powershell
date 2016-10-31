@@ -14,8 +14,6 @@ A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
-Import-Module .\Is4uFimPortal.psm1
-Import-Module .\Is4uFimPortalRcdc.psm1
 
 Function New-Attribute {
 <#
@@ -573,44 +571,16 @@ Function New-ObjectTypeConfiguration {
 				New-Binding -AttributeName $attrName -DisplayName $bindingDisplayName -Required $bindingRequired -ObjectType $boundObjectType
 			}
 		}
-
-		$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
+		
 		#-------------------------------
+		$rcdcName = $attrConfig.Element("RCDCs").Element("RCDC").Attribute("DisplayName").Value
 		Write-Host "Edit RCDC $rcdcName"
 		#-------------------------------
-		$ns = [XNameSpace] "http://schemas.microsoft.com/2006/11/ResourceManagement"
 		$rcdcObjectType = $attrConfig.Element("RCDCs").Element("RCDC").Element("Object").Value
 		$rcdcGrouping = $attrConfig.Element("RCDCs").Element("RCDC").Element("Grouping").Value
 		$rcdcCaption = $attrConfig.Element("RCDCs").Element("RCDC").Element("Caption").Value
 		$rcdcElement = Get-RcdcIdentityPicker -AttributeName $attrName -ObjectType $rcdcObjectType
-
-		$rcdc = Get-FimObject -Attribute DisplayName -Value $rcdcName -ObjectType ObjectVisualizationConfiguration
-		$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-		$file = "$pwd/$date" + "_" + $rcdcName + "_before.xml"
-		Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
-
-		$xDoc = [XDocument]::Load($file)
-		$panel = [XElement] $xDoc.Root.Element($ns + "Panel")
-		$grouping = [XElement] ($panel.Elements($ns + "Grouping") | Where { $_.Attribute($ns + "Name").Value -eq $rcdcGrouping } | Select -index 0)
-
-		if($grouping -eq $null) {
-			$grouping = New-Object XElement ($ns + "Grouping")
-			$grouping.Add((New-Object XAttribute ($ns + "Name"), $rcdcGrouping))
-			$grouping.Add((New-Object XAttribute ($ns + "Caption"), $rcdcCaption))
-			$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
-			$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
-			$grouping.Add($rcdcElement)
-			$panel.Add($grouping)
-		} else {
-			$grouping.Add($rcdcElement)
-		}
-
-		$file = "$pwd/$date" + "_" + $rcdcName + "_after.xml"
-		$xDoc.Save($exportFile)
-
-		$anchor = @{'DisplayName' = $rcdcName}
-		$changes = @{"ConfigurationData" = $xDoc.ToString()}
-		New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+		Add-ElementToRcdc -DisplayName $rcdcName -GroupingName $rcdcGrouping -RcdcElement $rcdcElement -Caption $rcdcCaption
 	}
 
 	#-------------------------------
@@ -664,18 +634,3 @@ Function New-ObjectTypeConfiguration {
 	$rcdcView = Get-DefaultRcdc -Caption "View $objectName" -Xml "defaultViewRcdc.xml"
 	New-Rcdc -DisplayName "Configuration for $objectName Viewing" -TargetObjectType $objectName -ConfigurationData $rcdcView.ToString() -AppliesToView
 }
-
-Export-ModuleMember New-Attribute
-Export-ModuleMember Update-Attribute
-Export-ModuleMember Remove-Attribute
-Export-ModuleMember New-Binding
-Export-ModuleMember Update-Binding
-Export-ModuleMember Remove-Binding
-Export-ModuleMember New-AttributeAndBinding
-Export-ModuleMember Remove-AttributeAndBinding
-Export-ModuleMember Import-SchemaAttributesAndBindings
-Export-ModuleMember Import-SchemaBindings
-Export-ModuleMember New-ObjectType
-Export-ModuleMember Update-ObjectType
-Export-ModuleMember Remove-ObjectType
-Export-ModuleMember New-ObjectTypeConfiguration

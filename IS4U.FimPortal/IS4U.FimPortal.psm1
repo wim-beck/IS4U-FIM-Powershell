@@ -1,5 +1,5 @@
 <#
-Copyright (C) 2015 by IS4U (info@is4u.be)
+Copyright (C) 2016 by IS4U (info@is4u.be)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,12 +14,7 @@ A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
-Import-Module .\Is4u.psm1
 Add-TypeAccelerators -Assembly System.Xml.Linq -Class XAttribute
-if(@(Get-PSSnapin | Where-Object {$_.Name -eq "FIMAutomation"}).Count -eq 0) {
-	Add-PSSnapin FIMAutomation
-}
-Import-Module .\FimPowerShellModule.psm1
 Add-TypeAccelerators -AssemblyName Microsoft.ResourceManagement -Class UniqueIdentifier
 
 Function Get-DynamicGroupFilter {
@@ -1277,42 +1272,3 @@ Function Remove-NavigationBar {
 	)
 	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType NavigationBarConfiguration
 }
-
-Export-ModuleMember Get-DynamicGroupFilter
-Export-ModuleMember Get-GroupMemberships
-Export-ModuleMember Add-ObjectToGroup
-Export-ModuleMember Remove-ObjectFromGroup
-Export-ModuleMember Get-Members
-Export-ModuleMember Remove-ObjectsFromPortal
-Export-ModuleMember Enable-PortalAccess
-Export-ModuleMember Set-ObjectSid
-Export-ModuleMember New-Workflow
-Export-ModuleMember Update-Workflow
-Export-ModuleMember Remove-Workflow
-Export-ModuleMember New-Mpr
-Export-ModuleMember Update-Mpr
-Export-ModuleMember Remove-Mpr
-Export-ModuleMember Enable-Mpr
-Export-ModuleMember Disable-Mpr
-Export-ModuleMember Add-AttributeToMpr
-Export-ModuleMember Remove-AttributeFromMpr
-Export-ModuleMember New-Set
-Export-ModuleMember Update-Set
-Export-ModuleMember Remove-Set
-Export-ModuleMember Add-ObjectToSet
-Export-ModuleMember Remove-ObjectFromSet
-Export-ModuleMember Get-SetMemberships
-Export-ModuleMember Get-Filter
-Export-ModuleMember Test-ObjectExists
-Export-ModuleMember Get-FimObject
-Export-ModuleMember Remove-FimObject
-Export-ModuleMember Add-ObjectToSynchronizationFilter
-Export-ModuleMember Remove-ObjectFromSynchronizationFilter
-Export-ModuleMember Add-AttributeToFilterScope
-Export-ModuleMember Remove-AttributeFromFilterScope
-Export-ModuleMember New-SearchScope
-Export-ModuleMember Update-SearchScope
-Export-ModuleMember Remove-SearchScope
-Export-ModuleMember New-NavigationBar
-Export-ModuleMember Update-NavigationBar
-Export-ModuleMember Remove-NavigationBar

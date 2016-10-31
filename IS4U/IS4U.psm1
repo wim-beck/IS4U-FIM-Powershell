@@ -46,9 +46,13 @@ Function Add-TypeAccelerators {
 	$typeAccelerators = [psobject].Assembly.GetType("System.Management.Automation.TypeAccelerators")
 	$existingAccelerators = $typeAccelerators::get
 	if(! $existingAccelerators.ContainsKey($Class)) {
-		$assembly = [Reflection.Assembly]::LoadWithPartialName($AssemblyName)
-		$assembly.GetTypes() | ? { $_.IsPublic } | % {
-			$typeAccelerators::Add( $_.Name, $_.FullName )
+		try {
+			$assembly = [Reflection.Assembly]::LoadWithPartialName($AssemblyName)
+			$assembly.GetTypes() | ? { $_.IsPublic } | % {
+				$typeAccelerators::Add( $_.Name, $_.FullName )
+			}
+		} catch {
+			Write-Warning "Assembly $AssemblyName not found on this system."
 		}
 	}
 }
@@ -118,7 +122,3 @@ Function Get-EncryptedPwd {
 	return ConvertFrom-SecureString $secureString
 }
 
-Export-ModuleMember Add-TypeAccelerators
-Export-ModuleMember Install-DllInGac
-Export-ModuleMember Test-Port
-Export-ModuleMember Get-EncryptedPwd

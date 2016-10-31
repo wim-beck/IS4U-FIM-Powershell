@@ -14,7 +14,6 @@ A full copy of the GNU General Public License can be found
 here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
-Import-Module .\Is4uFimPortal.psm1
 
 Function Enable-Sspr {
 <#
@@ -130,7 +129,3 @@ Function Install-LocalizedSspr {
 	}
 	Disable-Mpr "Anonymous users can reset their password"
 }
-
-Export-ModuleMember Enable-Sspr
-Export-ModuleMember Disable-Sspr
-Export-ModuleMember Install-LocalizedSspr
