@@ -269,6 +269,10 @@ Function Get-RcdcIdentityPicker {
 		
 		[Parameter(Mandatory=$False)] 
 		[String]
+		$Mode = "SingleResult",
+		
+		[Parameter(Mandatory=$False)] 
+		[String]
 		$ColumnsToDisplay = "DisplayName, Description",
 		
 		[Parameter(Mandatory=$False)] 
@@ -302,7 +306,7 @@ Function Get-RcdcIdentityPicker {
 
 	$property = New-Object XElement ($Ns + "Property")
 	$property.Add((New-Object XAttribute ($Ns+"Name"), "Mode"))
-	$property.Add((New-Object XAttribute ($Ns+"Value"), "SingleResult"))
+	$property.Add((New-Object XAttribute ($Ns+"Value"), $Mode))
 	$properties.Add($property)
 
 	$property = New-Object XElement ($Ns + "Property")
