@@ -4,7 +4,7 @@ The two ways to contribute to IS4U FIM PowerShell Code are: Fork the Repository 
 
 ### Fork the IS4U FIM PowerShell Repository.
 
-Fork a copy of the [PowerShell Repo](https://github.com/wim-beck/IS4U-FIM-Powershell), make the changes in your fork and send a pull request. Forking a repository allows you to freely experiment with changes without affecting the original project. See [Fork A Repo](https://help.github.com/articles/fork-a-repo/) help article for more information.
+Fork a copy of the [IS4U FIM PowerShell Repository](https://github.com/wim-beck/IS4U-FIM-Powershell), make the changes in your fork and send a pull request. Forking a repository allows you to freely experiment with changes without affecting the original project. See [Fork A Repository](https://help.github.com/articles/fork-a-repo/) help article for more information.
 
 #### Coding Guidelines
 
