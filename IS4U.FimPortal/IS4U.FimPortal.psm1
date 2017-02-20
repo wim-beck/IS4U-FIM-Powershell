@@ -184,10 +184,10 @@ Function Remove-ObjectFromGroup {
 Function Get-Members {
 <#
 	.SYNOPSIS
-	List all members of the given group.
+	List all members of the given group or set.
 
 	.DESCRIPTION
-	List all members of the given group.
+	List all members of the given group or set.
 	
 	.EXAMPLE
 	Get-Members -ObjectID 7fb2b853-24f0-4498-9534-4e10589723c4
@@ -225,7 +225,7 @@ Function Remove-ObjectsFromPortal {
 	param(
 		[Parameter(Mandatory=$False)] 
 		[String]
-		$ObjectType="Person"
+		$ObjectType = "Person"
 	)
 	$specialUsers = ("fb89aefa-5ea1-47f1-8890-abe7797d6497","7fb2b853-24f0-4498-9534-4e10589723c4")
 	Write-Host "Start exporting objects.."
@@ -257,10 +257,10 @@ Function Enable-PortalAccess {
 Function Set-ObjectSid {
 <#
 	.SYNOPSIS
-	Set the object sid of a given FIM portal user to the correct value.
+	Set the object sid of a given portal user to the correct value.
 
 	.DESCRIPTION
-	Set the object sid of a given FIM portal user to the correct value.
+	Set the object sid of a given portal user to the correct value.
 
 	.EXAMPLE
 	Set-ObjectSid -AccountName mim.installer -Domain IS4U

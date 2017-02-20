@@ -122,3 +122,67 @@ Function Get-EncryptedPwd {
 	return ConvertFrom-SecureString $secureString
 }
 
+Function Publish-ModuleDocumentation {
+<#
+    .SYNOPSIS
+    Generate github markdown style documentation for a given module.
+
+    .DESCRIPTION
+    Generate github markdown style documentation for a given module.
+
+    .EXAMPLE
+    Publish-ModuleDocumentation IS4U
+
+    .PARAMETER Module
+    Name of the module to be documented.
+#>
+    param(
+        [Parameter(Mandatory=$True)]
+        [String]
+        $Module
+    )
+    Import-Module $Module
+    $modulePath = Join-Path $pwd $Module
+    if(! (Test-Path $modulePath)) {
+        mkdir $modulePath | Out-Null
+    }
+    $mod = Get-Module $Module
+    foreach($function in $mod.ExportedCommands.Keys) {
+        $help = Get-Help $function -Full
+        $syntax = "``{0}``" -f ($help.syntax | Out-String).Trim()
+        $description = ($help.description | Out-String).Trim()
+
+        $file = Join-Path $modulePath "$function.md"
+        Write-Output "# Synopsis" | Out-File $file
+        Write-Output $help.Synopsis | Out-File $file -Append
+        Write-Output "`n# Syntax" | Out-File $file -Append
+        Write-Output $syntax | Out-File $file -Append
+        Write-Output "`n# Description" | Out-File $file -Append
+        Write-Output $description | Out-File $file -Append
+        Write-Output "`n# Parameters" | Out-File $file -Append
+        foreach($param in $help.parameters.parameter) {
+            $name = $param.Name
+            $description = ($param.description | Out-String).Trim()
+            $type = $param.Type.Name
+            $required = $param.Required
+            $position = $param.Position
+            $defaultValue = $param.DefaultValue
+            $pipeline = $param.PipelineInput
+            Write-Output "`n## $name" | Out-File $file -Append
+            Write-Output "$description`n" | Out-File $file -Append
+            Write-Output "Property | Value" | Out-File $file -Append
+            Write-Output "--- | ---" | Out-File $file -Append
+            Write-Output "Type | $type" | Out-File $file -Append
+            Write-Output "Required | $required" | Out-File $file -Append
+            Write-Output "Position | $position" | Out-File $file -Append
+            Write-Output "Default value | $defaultValue" | Out-File $file -Append
+            Write-Output "Accept pipeline input | $pipeline" | Out-File $file -Append
+        }
+        Write-Output "`n# Examples" | Out-File $file -Append
+        foreach($example in $help.examples.example) {
+            Write-Output ("``{0}``" -f $example.code) | Out-File $file -Append
+        }
+    }
+}
+
+
