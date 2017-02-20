@@ -10,3 +10,7 @@ This will install the modules in the $Env:ProgramFiles\WindowsPowershell\Modules
 # Documentation
 
 More info on the different modules and their implementations can be found on the [wiki](https://github.com/wim-beck/IS4U-FIM-Powershell/wiki).
+
+# Contributing
+
+For details on how you can contribute, please check [CONTRIBUTING.md](https://github.com/wim-beck/IS4U-FIM-Powershell/blob/master/CONTRIBUTING.md).
