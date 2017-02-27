@@ -162,14 +162,14 @@ Function Publish-ModuleDocumentation {
         Write-Output "`n# Parameters" | Out-File $file -Append
         foreach($param in $help.parameters.parameter) {
             $name = $param.Name
-            $description = ($param.description | Out-String).Trim()
+            $paramDescription = ($param.description | Out-String).Trim()
             $type = $param.Type.Name
             $required = $param.Required
             $position = $param.Position
             $defaultValue = $param.DefaultValue
             $pipeline = $param.PipelineInput
             Write-Output "`n## $name" | Out-File $file -Append
-            Write-Output "$description`n" | Out-File $file -Append
+            Write-Output "$paramDescription`n" | Out-File $file -Append
             Write-Output "Property | Value" | Out-File $file -Append
             Write-Output "--- | ---" | Out-File $file -Append
             Write-Output "Type | $type" | Out-File $file -Append
