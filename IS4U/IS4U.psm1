@@ -105,6 +105,29 @@ Function Test-Port {
     }
 }
 
+Function Test-PropertyExists {
+<#
+	.SYNOPSIS
+	Test if a given property exists on a PSObject.
+
+	.DESCRIPTION
+	Test if a given property exists on a PSObject. 
+	This is an equivalent of the check if($object.property) { ... }
+	But this check trhows errors when using strict mode, hence this method.
+	[Source: https://powershell.org/forums/topic/testing-for-property-existance]
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[PSObject]
+		$Object,
+
+		[Parameter(Mandatory=$True)]
+		[String]
+		$Property
+	)
+    return (Get-Member -InputObject $Object -Name $Property -MemberType Properties)
+}
+
 Function Get-EncryptedPwd {
 <#
 	.SYNOPSIS
@@ -148,11 +171,14 @@ Function Publish-ModuleDocumentation {
     }
     $mod = Get-Module $Module
     foreach($function in $mod.ExportedCommands.Keys) {
-        $help = Get-Help $function -Full
-        $syntax = "``{0}``" -f ($help.syntax | Out-String).Trim()
-        $description = ($help.description | Out-String).Trim()
-
-        $file = Join-Path $modulePath "$function.md"
+		Write-Host "$function`n"
+		$help = Get-Help $function -Full
+        $syntax = "``{0}``" -f ($help.Syntax | Out-String).Trim()
+		$description = ""
+		if(Test-PropertyExists $help Description){
+			$description = ($help.Description | Out-String).Trim()
+		}
+		$file = Join-Path $modulePath "$function.md"
         Write-Output "# Synopsis" | Out-File $file
         Write-Output $help.Synopsis | Out-File $file -Append
         Write-Output "`n# Syntax" | Out-File $file -Append
@@ -160,28 +186,35 @@ Function Publish-ModuleDocumentation {
         Write-Output "`n# Description" | Out-File $file -Append
         Write-Output $description | Out-File $file -Append
         Write-Output "`n# Parameters" | Out-File $file -Append
-        foreach($param in $help.parameters.parameter) {
-            $name = $param.Name
-            $paramDescription = ($param.description | Out-String).Trim()
-            $type = $param.Type.Name
-            $required = $param.Required
-            $position = $param.Position
-            $defaultValue = $param.DefaultValue
-            $pipeline = $param.PipelineInput
-            Write-Output "`n## $name" | Out-File $file -Append
-            Write-Output "$paramDescription`n" | Out-File $file -Append
-            Write-Output "Property | Value" | Out-File $file -Append
-            Write-Output "--- | ---" | Out-File $file -Append
-            Write-Output "Type | $type" | Out-File $file -Append
-            Write-Output "Required | $required" | Out-File $file -Append
-            Write-Output "Position | $position" | Out-File $file -Append
-            Write-Output "Default value | $defaultValue" | Out-File $file -Append
-            Write-Output "Accept pipeline input | $pipeline" | Out-File $file -Append
-        }
+		if(Test-PropertyExists $help.parameters parameter){
+			foreach($param in $help.parameters.parameter) {
+				$name = $param.Name
+				$description = ""
+				if(Test-PropertyExists $param Description){
+					$description = ($param.Description | Out-String).Trim()
+				}
+				$type = $param.Type.Name
+				$required = $param.Required
+				$position = $param.Position
+				$defaultValue = $param.DefaultValue
+				$pipeline = $param.PipelineInput
+				Write-Output "`n## $name" | Out-File $file -Append
+				Write-Output "$description`n" | Out-File $file -Append
+				Write-Output "Property | Value" | Out-File $file -Append
+				Write-Output "--- | ---" | Out-File $file -Append
+				Write-Output "Type | $type" | Out-File $file -Append
+				Write-Output "Required | $required" | Out-File $file -Append
+				Write-Output "Position | $position" | Out-File $file -Append
+				Write-Output "Default value | $defaultValue" | Out-File $file -Append
+				Write-Output "Accept pipeline input | $pipeline" | Out-File $file -Append
+			}
+		}
         Write-Output "`n# Examples" | Out-File $file -Append
-        foreach($example in $help.examples.example) {
-            Write-Output ("``{0}``" -f $example.code) | Out-File $file -Append
-        }
+		if(Test-PropertyExists $help examples){
+			foreach($example in $help.examples.example) {
+				Write-Output "``$($example.code)``" | Out-File $file -Append
+			}
+		}
     }
 }
 
