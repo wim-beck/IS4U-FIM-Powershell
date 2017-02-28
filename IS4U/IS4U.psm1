@@ -173,7 +173,7 @@ Function Publish-ModuleDocumentation {
     foreach($function in $mod.ExportedCommands.Keys) {
 		Write-Host "$function`n"
 		$help = Get-Help $function -Full
-        $syntax = "``{0}``" -f ($help.Syntax | Out-String).Trim()
+        $syntax = "``{0}``" -f ($help.Syntax | Out-String -Width 500).Trim()
 		$description = ""
 		if(Test-PropertyExists $help Description){
 			$description = ($help.Description | Out-String).Trim()
