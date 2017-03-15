@@ -58,7 +58,7 @@ Function New-Rcdc {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$DisplayName,
+		$RcdcName,
 
 		[Parameter(Mandatory=$True)]
 		[String]
@@ -79,7 +79,7 @@ Function New-Rcdc {
 	)
 	if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData) {
 		$changes = @()
-		$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
+		$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $RcdcName
 		$changes += New-FimImportChange -Operation 'None' -AttributeName 'TargetObjectType' -AttributeValue $TargetObjectType
 		$changes += New-FimImportChange -Operation 'None' -AttributeName 'ConfigurationData' -AttributeValue $ConfigurationData
 		if($AppliesToCreate) {
@@ -112,14 +112,14 @@ Function Update-Rcdc {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$DisplayName,
+		$RcdcName,
 
 		[Parameter(Mandatory=$True)]
 		[String]
 		$ConfigurationData
 	)
 	if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData) {
-		$anchor = @{'DisplayName' = $DisplayName}
+		$anchor = @{'DisplayName' = $RcdcName}
 		$changes = @{"ConfigurationData" = $ConfigurationData}
 		New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	} else {
@@ -138,9 +138,9 @@ Function Remove-Rcdc {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$DisplayName
+		$RcdcName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType ObjectVisualizationConfiguration
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $RcdcName -ObjectType ObjectVisualizationConfiguration
 }
 
 Function Add-ElementToRcdc {
@@ -157,7 +157,7 @@ Function Add-ElementToRcdc {
 	param(
 		[Parameter(Mandatory=$True)] 
 		[String]
-		$DisplayName,
+		$RcdcName,
 		
 		[Parameter(Mandatory=$True)]
 		[String]
@@ -171,9 +171,9 @@ Function Add-ElementToRcdc {
 		[String]
 		$Caption = "Caption"
 	)
-	$rcdc = Get-FimObject -Attribute DisplayName -Value $DisplayName -ObjectType ObjectVisualizationConfiguration
+	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
 	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$file = "$pwd/$date" + "_" + $DisplayName + "_before.xml"
+	$file = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
 	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
 
 	$xDoc = [XDocument]::Load($file)
@@ -196,10 +196,10 @@ Function Add-ElementToRcdc {
 	} else {
 		$grouping.Add($RcdcElement)
 	}
-	$file = "$pwd/$date" + "_" + $DisplayName + "_after.xml"
+	$file = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
 	$xDoc.Save($file)
 	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
-		Update-Rcdc -DisplayName $DisplayName -ConfigurationData $xDoc.ToString()
+		Update-Rcdc -DisplayName $RcdcName -ConfigurationData $xDoc.ToString()
 	} else {
 		Write-Warning "Invalid rcdc configuration not uploaded" 
 	}
