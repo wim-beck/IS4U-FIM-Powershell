@@ -134,6 +134,9 @@ Function Remove-Rcdc {
 
 	.DESCRIPTION
 	Remove a resource configuration display configuration.
+
+    .EXAMPLE
+    Remove-Rcdc -RcdcName 
 #>
 	param(
 		[Parameter(Mandatory=$True)]
@@ -152,7 +155,16 @@ Function Add-ElementToRcdc {
 	Add an element to the RCDC configuration.
 	
 	.EXAMPLE
-	Add-ElementToRcdc -DisplayName "Configuration for user editing" -GroupingName "Basic" -RcdcElement <Element>
+	Add-ElementToRcdc -RcdcName "Configuration for user editing" -GroupingName "Basic" -RcdcElement <Element>
+
+    .PARAMETER RcdcName
+    The name of the RCDC in the FIM portal
+
+    .PARAMETER GroupingName
+    The name of the grouping in which the element will be added. This will show in the FIM Portal as a new tab. If the name does not equal an existing FIM grouping a new grouping will be created with the name specified.
+
+    .PARAMETER RcdcElement
+    The XML-element to add to the RCDC
 #>
 	param(
 		[Parameter(Mandatory=$True)] 
@@ -169,21 +181,21 @@ Function Add-ElementToRcdc {
 		
 		[Parameter(Mandatory=$False)]
 		[String]
-		$Caption = "Caption"
+		$GroupingCaption = "Caption"
 	)
 	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
 	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$file = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
-	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
+	$filename = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
+	Write-Output $rcdc.ConfigurationData | Out-File $filename -Encoding UTF8
 
-	$xDoc = [XDocument]::Load($file)
+	$xDoc = [XDocument]::Load($filename)
 	$panel = [XElement] $xDoc.Root.Element($Ns + "Panel")
 	$grouping = [XElement] ($panel.Elements($Ns + "Grouping") | Where { $_.Attribute($Ns + "Name").Value -eq $GroupingName } | Select -index 0)
 	
 	if($grouping -eq $null) {
 		$grouping = New-Object XElement ($ns + "Grouping")
 		$grouping.Add((New-Object XAttribute ($ns + "Name"), $GroupingName))
-		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $Caption))
+		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $GroupingCaption))
 		$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
 		$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
 		$grouping.Add($RcdcElement)
@@ -196,8 +208,8 @@ Function Add-ElementToRcdc {
 	} else {
 		$grouping.Add($RcdcElement)
 	}
-	$file = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
-	$xDoc.Save($file)
+	$filename = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
+	$xDoc.Save($filename)
 	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
 		Update-Rcdc -DisplayName $RcdcName -ConfigurationData $xDoc.ToString()
 	} else {
