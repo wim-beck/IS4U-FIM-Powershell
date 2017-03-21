@@ -193,6 +193,9 @@ Function Add-ElementToRcdc {
 
     .PARAMETER RcdcElement
     The XML-element to add to the RCDC
+
+    .PARAMETER BeforeElement
+    Specifies the name of the "my:Control" element in front of which the new element will be added. If this parameter is not specified, the new element will be added at the end of the grouping.
 #>
 	param(
 		[Parameter(Mandatory=$True)] 
@@ -209,7 +212,12 @@ Function Add-ElementToRcdc {
 		
 		[Parameter(Mandatory=$False)]
 		[String]
-		$GroupingCaption = "Caption"
+		$GroupingCaption = "Caption",
+        
+        [Parameter(Mandatory=$False)]
+		[String]
+		$BeforeElement
+
 	)
 	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
 	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
@@ -219,6 +227,7 @@ Function Add-ElementToRcdc {
 	$xDoc = [XDocument]::Load($filename)
 	$panel = [XElement] $xDoc.Root.Element($Ns + "Panel")
 	$grouping = [XElement] ($panel.Elements($Ns + "Grouping") | Where { $_.Attribute($Ns + "Name").Value -eq $GroupingName } | Select -index 0)
+    $control = [XElement] ($grouping.Elements($Ns + "Control")| Where { $_.Attribute($Ns + "Name").Value -eq $BeforeElement } | Select -index 0)
 	
 	if($grouping -eq $null) {
 		$grouping = New-Object XElement ($ns + "Grouping")
@@ -233,13 +242,18 @@ Function Add-ElementToRcdc {
 		} else {
 			$summary.AddBeforeSelf($grouping)
 		}
-	} else {
-		$grouping.Add($RcdcElement)
+	
+} else {
+        if($BeforeElement){
+            $control.AddBeforeSelf($RcdcElement)
+        }else{
+            $grouping.Add($RcdcElement)
+        }
 	}
 	$filename = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
 	$xDoc.Save($filename)
 	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
-		Update-Rcdc -DisplayName $RcdcName -ConfigurationData $xDoc.ToString()
+		Update-Rcdc -RcdcName $RcdcName -ConfigurationData $xDoc.ToString()
 	} else {
 		Write-Warning "Invalid rcdc configuration not uploaded" 
 	}
@@ -405,17 +419,26 @@ Function Get-RcdcTextBox {
 
 	.DESCRIPTION
 	Create an XElement configuration for an RCDC Text Box.
+
+    .PARAMETER AttributeName
+    The system attribute name of the FIM portal attribute.
+
+    .PARAMETER ControlElementName
+    The name of the "my:Control" element inside the RCDC. This value has to be unique in the RCDC. If this parameter is not specified the "AttributeName" will be used.
 	
 	.EXAMPLE
-	Get-RcdcTextBox -AttributeName VisaCardNumber
+	Get-RcdcTextBox -AttributeName VisaCardNumber -ControlElementName uniqueNameVisa
 #>
 	param(
 		[Parameter(Mandatory=$True)] 
 		[String]
-		$AttributeName
+		$AttributeName,
+        [Parameter(Mandatory=$False)] 
+		[String]
+		$ControlElementName = $AttributeName
 	)
 	$element = New-Object XElement ($Ns + "Control")
-	$element.Add((New-Object XAttribute ($Ns + "Name"), $AttributeName))
+	$element.Add((New-Object XAttribute ($Ns + "Name"), $ControlElementName))
 	$element.Add((New-Object XAttribute ($Ns + "TypeName"), "UocTextBox"))
 	$element.Add((New-Object XAttribute ($Ns + "Caption"), "{Binding Source=schema, Path=$AttributeName.DisplayName}"))
 	$element.Add((New-Object XAttribute ($Ns + "Description"), "{Binding Source=schema, Path=$AttributeName.Description}"))
