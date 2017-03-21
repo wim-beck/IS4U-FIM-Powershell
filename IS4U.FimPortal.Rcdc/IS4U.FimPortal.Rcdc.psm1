@@ -255,8 +255,60 @@ Function Add-ElementToRcdc {
 	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
 		Update-Rcdc -RcdcName $RcdcName -ConfigurationData $xDoc.ToString()
 	} else {
-		Write-Warning "Invalid rcdc configuration not uploaded" 
+		Write-Warning "Invalid RCDC configuration not uploaded" 
 	}
+}
+
+Function Remove-ElementFromRcdc {
+<#
+	.SYNOPSIS
+	Removes an element from the RCDC configuration.
+
+	.DESCRIPTION
+	Removes an element from the RCDC configuration.
+	
+	.EXAMPLE
+	Remove-ElementFromRcdc -RcdcName "Configuration for user editing" -ControlName "Domain"
+
+    .PARAMETER RcdcName
+    The name of the RCDC in the FIM portal
+
+    .PARAMETER ControlName
+
+#>
+	param(
+		[Parameter(Mandatory=$True)] 
+		[String]
+		$RcdcName,
+		
+		[Parameter(Mandatory=$True)]
+		[String]
+		$ControlName		
+
+	)
+	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
+	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
+	$filename = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
+	Write-Output $rcdc.ConfigurationData | Out-File $filename -Encoding UTF8
+
+	$xDoc = [XDocument]::Load($filename)
+	$panel = [XElement] $xDoc.Root.Element($Ns + "Panel")
+    $control = [XElement] ($panel.Descendants($Ns + "Control")| Where { $_.Attribute($Ns + "Name").Value -eq $ControlName } | Select -index 0)
+    if($control){
+        $control.Remove()
+    }else{
+        Write-Warning "Control '$ControlName' not found, operation aborted"
+        Remove-Item $filename
+        return
+    }
+    $filename = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
+	$xDoc.Save($filename)
+	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
+		Update-Rcdc -RcdcName $RcdcName -ConfigurationData $xDoc.ToString()
+	} else {
+		Write-Warning "Invalid RCDC configuration not uploaded" 
+	}
+
 }
 
 Function Get-DefaultRcdc {
