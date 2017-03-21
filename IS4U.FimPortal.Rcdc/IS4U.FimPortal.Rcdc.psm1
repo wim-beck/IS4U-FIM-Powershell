@@ -274,6 +274,7 @@ Function Remove-ElementFromRcdc {
     The name of the RCDC in the FIM portal
 
     .PARAMETER ControlName
+    The name of the "my:Control" element in the RCDC. If the Control Element can not be found the remove operation will be aborted.
 
 #>
 	param(
