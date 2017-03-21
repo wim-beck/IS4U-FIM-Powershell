@@ -146,6 +146,34 @@ Function Remove-Rcdc {
 	Remove-FimObject -AnchorName DisplayName -AnchorValue $RcdcName -ObjectType ObjectVisualizationConfiguration
 }
 
+Function Read-RcdcFromFile {
+    <#
+	.SYNOPSIS
+	Reads and validates an RCDC from an .xml file
+
+	.DESCRIPTION
+	Reads the RCDC from an .xml file and validates the file against the XML schema. Returns a string which can be used as $ConfigurationData
+
+    .EXAMPLE
+    Read-RcdcFromFile -FilePath "C:\Users\FIMUser\Downloads\user_edit.xmll"
+
+    .PARAMETER filepath
+    Specifies the full path to the saved RCDC configuration. Example: "C:\Users\FIMUser\Downloads\user_edit.xml"
+    
+#>
+	param(
+		[Parameter(Mandatory=$True)]
+		[String]
+		$FilePath
+	)
+    [String] $ConfigurationData = Get-Content -Path $filepath
+    if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData){
+        return $ConfigurationData
+    }else{
+        Write-Warning -Message "Read XML ($filepath) is not valid"
+    }
+}
+
 Function Add-ElementToRcdc {
 <#
 	.SYNOPSIS
