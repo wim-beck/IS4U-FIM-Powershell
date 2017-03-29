@@ -58,7 +58,7 @@ Function New-Rcdc {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$RcdcName,
+		$DisplayName,
 
 		[Parameter(Mandatory=$True)]
 		[String]
@@ -79,7 +79,7 @@ Function New-Rcdc {
 	)
 	if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData) {
 		$changes = @()
-		$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $RcdcName
+		$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
 		$changes += New-FimImportChange -Operation 'None' -AttributeName 'TargetObjectType' -AttributeValue $TargetObjectType
 		$changes += New-FimImportChange -Operation 'None' -AttributeName 'ConfigurationData' -AttributeValue $ConfigurationData
 		if($AppliesToCreate) {
@@ -112,14 +112,14 @@ Function Update-Rcdc {
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$RcdcName,
+		$DisplayName,
 
 		[Parameter(Mandatory=$True)]
 		[String]
 		$ConfigurationData
 	)
 	if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData) {
-		$anchor = @{'DisplayName' = $RcdcName}
+		$anchor = @{'DisplayName' = $DisplayName}
 		$changes = @{"ConfigurationData" = $ConfigurationData}
 		New-FimImportObject -ObjectType ObjectVisualizationConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	} else {
@@ -134,44 +134,13 @@ Function Remove-Rcdc {
 
 	.DESCRIPTION
 	Remove a resource configuration display configuration.
-
-    .EXAMPLE
-    Remove-Rcdc -RcdcName 
 #>
 	param(
 		[Parameter(Mandatory=$True)]
 		[String]
-		$RcdcName
+		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $RcdcName -ObjectType ObjectVisualizationConfiguration
-}
-
-Function Read-RcdcFromFile {
-    <#
-	.SYNOPSIS
-	Reads and validates an RCDC from an .xml file
-
-	.DESCRIPTION
-	Reads the RCDC from an .xml file and validates the file against the XML schema. Returns a string which can be used as $ConfigurationData
-
-    .EXAMPLE
-    Read-RcdcFromFile -FilePath "C:\Users\FIMUser\Downloads\user_edit.xmll"
-
-    .PARAMETER filepath
-    Specifies the full path to the saved RCDC configuration. Example: "C:\Users\FIMUser\Downloads\user_edit.xml"
-    
-#>
-	param(
-		[Parameter(Mandatory=$True)]
-		[String]
-		$FilePath
-	)
-    [String] $ConfigurationData = Get-Content -Path $filepath
-    if(Test-RcdcConfiguration -ConfigurationData $ConfigurationData){
-        return $ConfigurationData
-    }else{
-        Write-Warning -Message "Read XML ($filepath) is not valid"
-    }
+	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType ObjectVisualizationConfiguration
 }
 
 Function Add-ElementToRcdc {
@@ -183,24 +152,12 @@ Function Add-ElementToRcdc {
 	Add an element to the RCDC configuration.
 	
 	.EXAMPLE
-	Add-ElementToRcdc -RcdcName "Configuration for user editing" -GroupingName "Basic" -RcdcElement <Element>
-
-    .PARAMETER RcdcName
-    The name of the RCDC in the FIM portal
-
-    .PARAMETER GroupingName
-    The name of the grouping in which the element will be added. This will show in the FIM Portal as a new tab. If the name does not equal an existing FIM grouping a new grouping will be created with the name specified.
-
-    .PARAMETER RcdcElement
-    The XML-element to add to the RCDC
-
-    .PARAMETER BeforeElement
-    Specifies the name of the "my:Control" element in front of which the new element will be added. If this parameter is not specified, the new element will be added at the end of the grouping.
+	Add-ElementToRcdc -DisplayName "Configuration for user editing" -GroupingName "Basic" -RcdcElement <Element>
 #>
 	param(
 		[Parameter(Mandatory=$True)] 
 		[String]
-		$RcdcName,
+		$DisplayName,
 		
 		[Parameter(Mandatory=$True)]
 		[String]
@@ -212,27 +169,21 @@ Function Add-ElementToRcdc {
 		
 		[Parameter(Mandatory=$False)]
 		[String]
-		$GroupingCaption = "Caption",
-        
-        [Parameter(Mandatory=$False)]
-		[String]
-		$BeforeElement
-
+		$Caption = "Caption"
 	)
-	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
+	$rcdc = Get-FimObject -Attribute DisplayName -Value $DisplayName -ObjectType ObjectVisualizationConfiguration
 	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$filename = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
-	Write-Output $rcdc.ConfigurationData | Out-File $filename -Encoding UTF8
+	$file = "$pwd/$date" + "_" + $DisplayName + "_before.xml"
+	Write-Output $rcdc.ConfigurationData | Out-File $file -Encoding UTF8
 
-	$xDoc = [XDocument]::Load($filename)
+	$xDoc = [XDocument]::Load($file)
 	$panel = [XElement] $xDoc.Root.Element($Ns + "Panel")
 	$grouping = [XElement] ($panel.Elements($Ns + "Grouping") | Where { $_.Attribute($Ns + "Name").Value -eq $GroupingName } | Select -index 0)
-    $control = [XElement] ($grouping.Elements($Ns + "Control")| Where { $_.Attribute($Ns + "Name").Value -eq $BeforeElement } | Select -index 0)
 	
 	if($grouping -eq $null) {
 		$grouping = New-Object XElement ($ns + "Grouping")
 		$grouping.Add((New-Object XAttribute ($ns + "Name"), $GroupingName))
-		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $GroupingCaption))
+		$grouping.Add((New-Object XAttribute ($ns + "Caption"), $Caption))
 		$grouping.Add((New-Object XAttribute ($ns + "Enabled"), $true))
 		$grouping.Add((New-Object XAttribute ($ns + "Visible"), $true))
 		$grouping.Add($RcdcElement)
@@ -242,74 +193,16 @@ Function Add-ElementToRcdc {
 		} else {
 			$summary.AddBeforeSelf($grouping)
 		}
-	
-} else {
-        if($BeforeElement){
-            $control.AddBeforeSelf($RcdcElement)
-        }else{
-            $grouping.Add($RcdcElement)
-        }
-	}
-	$filename = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
-	$xDoc.Save($filename)
-	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
-		Update-Rcdc -RcdcName $RcdcName -ConfigurationData $xDoc.ToString()
 	} else {
-		Write-Warning "Invalid RCDC configuration not uploaded" 
+		$grouping.Add($RcdcElement)
 	}
-}
-
-Function Remove-ElementFromRcdc {
-<#
-	.SYNOPSIS
-	Removes an element from the RCDC configuration.
-
-	.DESCRIPTION
-	Removes an element from the RCDC configuration.
-	
-	.EXAMPLE
-	Remove-ElementFromRcdc -RcdcName "Configuration for user editing" -ControlName "Domain"
-
-    .PARAMETER RcdcName
-    The name of the RCDC in the FIM portal
-
-    .PARAMETER ControlName
-    The name of the "my:Control" element in the RCDC. If the Control Element can not be found the remove operation will be aborted.
-
-#>
-	param(
-		[Parameter(Mandatory=$True)] 
-		[String]
-		$RcdcName,
-		
-		[Parameter(Mandatory=$True)]
-		[String]
-		$ControlName		
-
-	)
-	$rcdc = Get-FimObject -Attribute DisplayName -Value $RcdcName -ObjectType ObjectVisualizationConfiguration
-	$date = [datetime]::now.ToString("yyyy-MM-dd_HHmmss")
-	$filename = "$pwd/$date" + "_" + $RcdcName + "_before.xml"
-	Write-Output $rcdc.ConfigurationData | Out-File $filename -Encoding UTF8
-
-	$xDoc = [XDocument]::Load($filename)
-	$panel = [XElement] $xDoc.Root.Element($Ns + "Panel")
-    $control = [XElement] ($panel.Descendants($Ns + "Control")| Where { $_.Attribute($Ns + "Name").Value -eq $ControlName } | Select -index 0)
-    if($control){
-        $control.Remove()
-    }else{
-        Write-Warning "Control '$ControlName' not found, operation aborted"
-        Remove-Item $filename
-        return
-    }
-    $filename = "$pwd/$date" + "_" + $RcdcName + "_after.xml"
-	$xDoc.Save($filename)
+	$file = "$pwd/$date" + "_" + $DisplayName + "_after.xml"
+	$xDoc.Save($file)
 	if(Test-RcdcConfiguration -ConfigurationData $xDoc.ToString()) {
-		Update-Rcdc -RcdcName $RcdcName -ConfigurationData $xDoc.ToString()
+		Update-Rcdc -DisplayName $DisplayName -ConfigurationData $xDoc.ToString()
 	} else {
-		Write-Warning "Invalid RCDC configuration not uploaded" 
+		Write-Warning "Invalid rcdc configuration not uploaded" 
 	}
-
 }
 
 Function Get-DefaultRcdc {
@@ -472,26 +365,17 @@ Function Get-RcdcTextBox {
 
 	.DESCRIPTION
 	Create an XElement configuration for an RCDC Text Box.
-
-    .PARAMETER AttributeName
-    The system attribute name of the FIM portal attribute.
-
-    .PARAMETER ControlElementName
-    The name of the "my:Control" element inside the RCDC. This value has to be unique in the RCDC. If this parameter is not specified the "AttributeName" will be used.
 	
 	.EXAMPLE
-	Get-RcdcTextBox -AttributeName VisaCardNumber -ControlElementName uniqueNameVisa
+	Get-RcdcTextBox -AttributeName VisaCardNumber
 #>
 	param(
 		[Parameter(Mandatory=$True)] 
 		[String]
-		$AttributeName,
-        [Parameter(Mandatory=$False)] 
-		[String]
-		$ControlElementName = $AttributeName
+		$AttributeName
 	)
 	$element = New-Object XElement ($Ns + "Control")
-	$element.Add((New-Object XAttribute ($Ns + "Name"), $ControlElementName))
+	$element.Add((New-Object XAttribute ($Ns + "Name"), $AttributeName))
 	$element.Add((New-Object XAttribute ($Ns + "TypeName"), "UocTextBox"))
 	$element.Add((New-Object XAttribute ($Ns + "Caption"), "{Binding Source=schema, Path=$AttributeName.DisplayName}"))
 	$element.Add((New-Object XAttribute ($Ns + "Description"), "{Binding Source=schema, Path=$AttributeName.Description}"))
