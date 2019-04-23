@@ -15,223 +15,6 @@ here: http://opensource.org/licenses/gpl-3.0.
 #>
 Set-StrictMode -Version Latest
 
-#region Lithnet
-if(!(Get-Module -Name LithnetRMA))
-{
-Import-Module LithnetRMA;
-}
-#Set-ResourceManagementClient -BaseAddress http://localhost:5725;
-#endregion Lithnet
-
-Function New-Person {
-	<#
-	.SYNOPSIS
-	Create a new person in the FIM Portal schema.
-
-	.DESCRIPTION
-	Create a new person in the FIM Portal schema.
-
-	.EXAMPLE
-	New-Person -Address "str lane" -City Edegem -Department Sec -DisplayName MSamson -EmailAlias msamson `
-	-EmployeeID 6555 -EmployeeType Intern -FirstName Mark -JobTitle Engineer -LastName Samson -OfficePhone 045578461 -PostalCode 2650 
-	#>
-
-param (
-	[Parameter(Mandatory=$True)]
-	[String]
-	$Department,
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$DisplayName,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$Domain = "Fim",
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$EmailAlias,
-
-	[Parameter(Mandatory=$False)]
-	[Bool]
-	$RasAccessPermission = $False,
-	
-	[Parameter(Mandatory=$True)]
-	[String]
-	$Address,
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$City,
-	
-	[Parameter(Mandatory=$False)]
-	[String]
-	[ValidateLength(2, 2)]
-	$Country = "BE",				#Has to be length of 2 (example: BE)
-	
-	[Parameter(Mandatory=$True)]
-	[Int]
-	$EmployeeID,
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$EmployeeType,
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$FirstName,
-	
-	[Parameter(Mandatory=$True)]
-	[String]
-	$JobTitle,
-	
-	[Parameter(Mandatory=$True)]
-	[String]
-	$LastName,
-	
-	[Parameter(Mandatory=$True)]
-	[int]
-	$OfficePhone,
-	
-	[Parameter(Mandatory=$True)]
-	[Int]
-	[ValidateRange(1000, 9999)]
-	$PostalCode
-)
-
-$resource = New-Resource -ObjectType Person 	## User is displayName, Person is ObectType
-$resource.Address = $Address
-$resource.City = $City
-$resource.Country = $Country
-$resource.Department = $Department
-$resource.DisplayName = $DisplayName
-$resource.Domain = $Domain
-$resource.EmailAlias = $EmailAlias
-$resource.EmployeeId = $EmployeeID
-$resource.EmployeeType = $EmployeeType
-$resource.FirstName = $FirstName
-$resource.JobTitle = $JobTitle
-$resource.LastName = $LastName
-$resource.OfficePhone = $OfficePhone
-$resource.PostalCode = $PostalCode
-$resource.RasAccessPermission = $RasAccessPermission
-Save-Resource $resource	# put in comment for testing
-# return $resource ## Testing purposes
-}
-
-Function Update-Person {
-	<#
-	.SYNOPSIS
-	Updates a person in the FIM Portal schema.
-
-	.DESCRIPTION
-	updates a person in the FIM Portal schema.
-
-	.EXAMPLE
-	Update-Person -Address "Street lane" -City Edegem -Country BE -Department Sec -DisplayName MSamson`
- 	-Domain FIM -EmailAlias msamson -EmployeeID 6555 -EmployeeType Intern -FirstName Mark -JobTitle Engineer -LastName Samson`
-	 -OfficePhone 045578461 -PostalCode 2650 
-	 
-	 .EXAMPLE
-	Update-Person -DisplayName MSamson -Address "New street" -City Antwerp
-	#>
-param (
-	[Parameter(Mandatory=$False)]
-	[String]
-	$Address,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$City,
-	
-	[Parameter(Mandatory=$False)]
-	[String]
-	[ValidateLength(2, 2)]
-	$Country,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$Department,
-
-	[Parameter(Mandatory=$True)]
-	[String]
-	$DisplayName,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$Domain,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$EmailAlias,
-
-	[Parameter(Mandatory=$False)]
-	[Int]
-	$EmployeeID,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$EmployeeType,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$FirstName,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$JobTitle,
-
-	[Parameter(Mandatory=$False)]
-	[String]
-	$LastName,
-
-	[Parameter(Mandatory=$False)]
-	[int]
-	$OfficePhone,
-
-	[Parameter(Mandatory=$False)]
-	[Int]
-	[ValidateRange(1000, 9999)]
-	$PostalCode,
-
-	[Parameter(Mandatory=$False)]
-	[Bool]
-	$RasAccessPermission = $False
-)
-
-# PSBoundparmaters is used so that only the parameters that are inserted will be used to update the User's attributes
-$global:resource = Get-Resource -ObjectType Person -AttributeName DisplayName -AttributeValue $DisplayName
-foreach($boundparam in $PSBoundParameters.GetEnumerator()) {
-	$global:resource.($boundparam.Key) = $boundparam.Value
-}
-
-Save-Resource $resource # put in comment for testing
-# return $resource ## Testing purposes
-}
-
-Function Remove-Person {
-	<#
-	.SYNOPSIS
-	Removes a person in the FIM Portal schema.
-
-	.DESCRIPTION
-	Removes a person in the FIM Portal schema.
-	 
-	.EXAMPLE
-	Remove-Person -DisplayName MSamson
-	#>
-	param (
-		[Parameter(Mandatory=$True)]
-		[String]
-		$DisplayName
-	)
-	##With pipeline:
-	#Get-Resource -ObjectType Person -AttributeName DisplayName -AttributeValue $DisplayName | Remove-Resource
-	$id = Get-Resource -ObjectType Person -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
-	Remove-Resource -ID $id.ObjectID.Value
-}
-
 Function New-Attribute {
 <#
 	.SYNOPSIS
@@ -258,23 +41,22 @@ Function New-Attribute {
 
 		[Parameter(Mandatory=$True)]
 		[String]
-		[ValidateScript({("String", "DateTime", "Integer", "Reference", "Boolean", "Text", "Binary") -contains $_})]
+		[ValidateScript({("String", "DateTime", "Integer", "Reference", "Boolean", "Text", "Binary") -ccontains $_})]
 		$Type,
 
 		[Parameter(Mandatory=$False)]
 		[String]
 		$MultiValued = "False"
 	)
-	$obj = New-Resource -ObjectType AttributeTypeDescription
-	$obj.DisplayName = $DisplayName
-	$obj.Name = $Name
-	$obj.Description = $Description
-	$obj.DataType = $Type
-	$obj.MultiValued = $MultiValued
-	Save-Resource $obj	# put in comment for testing
-	$id = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name -AttributesToGet ObjectID
-	return $id.ObjectID.Value # put in comment for testing
-	#return $obj		##For testing purposes
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Name", $Name)
+	$changes.Add("Description", $Description)
+	$changes.Add("DataType", $Type)
+	$changes.Add("Multivalued", $MultiValued)
+	$attr = New-FimImportObject -ObjectType AttributeTypeDescription -State Create -Changes $changes -ApplyNow -SkipDuplicateCheck -PassThru
+	[UniqueIdentifier] $id = $attr.TargetObjectIdentifier
+	return $id
 }
 
 Function Update-Attribute {
@@ -301,11 +83,13 @@ Function Update-Attribute {
 		[String]
 		$Description
 	)
-	$obj = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
-	$obj.DisplayName = $DisplayName
-	$obj.Description = $Description
-	Save-Resource $obj # put in comment for testing
-	return $obj.ObjectID.Value
+	$anchor = @{'Name' = $Name}
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType AttributeTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	[GUID] $id = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name
+	return $id
 }
 
 Function Remove-Attribute {
@@ -324,11 +108,7 @@ Function Remove-Attribute {
 		[String]
 		$Name
 	)
-	#Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name | Remove-Resource
-
-	# Use the ObjectID of the object to remove the correct resource
-	$id = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $Name -AttributesToGet ObjectID 
-	Remove-Resource -ID $id.ObjectID.Value
+	Remove-FimObject -AnchorName Name -AnchorValue $Name -ObjectType AttributeTypeDescription
 }
 
 Function New-Binding {
@@ -366,20 +146,17 @@ Function New-Binding {
 		[String]
 		$ObjectType = "Person"
 	)
-	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectId
-	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectId
-	$obj = New-Resource -ObjectType BindingDescription
-	$obj.Required = $Required
-	$obj.DisplayName = $DisplayName
-	$obj.Description = $Description
-	$obj.BoundAttributeType = $attrId#.ObjectId.Value 	## for testing
-	$obj.BoundObjectType = $objId#.ObjectId.Value		## for testing
-	Save-Resource $obj
-	$id = Get-Resource -ObjectType BindingDescription -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
-	return $id.ObjectID.Value
-	## Pester testing v
-	#$obj.id = Get-Resource -ObjectType BindingDescription -AttributeName DisplayName -AttributeValue $DisplayName ## for testing
-	#return $obj		## Testing purposes, to get the id of the resource ask for ObjectId.Value on the resource
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
+	$changes = @{}
+	$changes.Add("Required", $Required)
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	$changes.Add("BoundAttributeType", $attrId)
+	$changes.Add("BoundObjectType", $objId)
+	$binding = New-FimImportObject -ObjectType BindingDescription -State Create -Changes $changes -ApplyNow -SkipDuplicateCheck -PassThru
+	[UniqueIdentifier] $id = $binding.TargetObjectIdentifier
+	return $id
 }
 
 Function Update-Binding {
@@ -417,16 +194,17 @@ Function Update-Binding {
 		[String]
 		$ObjectType = "Person"
 	)
-	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectID
-	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectID
-	$id = Get-Resource -ObjectType BindingDescription -AttributeValuePairs `
-	@{BoundAttributeType = $attrId.ObjectId.Value; BoundObjectType=$objId.ObjectId.Value} -AttributesToGet ObjectID
-	$obj = Get-Resource -ID $id.ObjectID.Value
-	$obj.Required = $Required
-	$obj.DisplayName = $DisplayName
-	$obj.Description = $Description
-	Save-Resource $obj # put in comment for testing
-	return $id.ObjectID.Value
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
+	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
+	[UniqueIdentifier] $id = $binding.ObjectID
+	$anchor = @{"ObjectID" = $id.Value}
+	$changes = @{}
+	$changes.Add("Required", $Required)
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType BindingDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	return $id.Value
 }
 
 Function Remove-Binding {
@@ -449,11 +227,11 @@ Function Remove-Binding {
 		[String]
 		$ObjectType = "Person"
 	)
-	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectID
-	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectID 
-	$id = Get-Resource -ObjectType BindingDescription -AttributeValuePairs `
-	@{BoundAttributeType = $attrId.ObjectID; BoundObjectType = $objId.ObjectID} -AttributesToGet ObjectID
-	Remove-Resource -ID $id.ObjectID.Value 
+	$attrId = Get-FimObjectID -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName
+	$objId = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType
+	$binding = Get-FimObject -Filter "/BindingDescription[BoundAttributeType='$attrId' and BoundObjectType='$objId']"
+	[UniqueIdentifier] $id = $binding.ObjectID
+	Remove-FimObject -AnchorName ObjectID -AnchorValue $id.Value -ObjectType BindingDescription
 }
 
 Function New-AttributeAndBinding {
@@ -489,6 +267,7 @@ Function New-AttributeAndBinding {
 		[String]
 		$ObjectType = "Person"
 	)
+
 	[UniqueIdentifier] $attrId = New-Attribute -Name $Name -DisplayName $DisplayName -Type $Type -MultiValued $MultiValued
 	New-Binding -AttributeName $Name -DisplayName $DisplayName -ObjectType $ObjectType
 	if($ObjectType -eq "Person") {
@@ -601,13 +380,13 @@ Function New-ObjectType {
 		[String]
 		$Description
 	)
-	$obj = New-Resource -ObjectType ObjectTypeDescription 
-	$obj.DisplayName = $DisplayName
-	$obj.Name = $Name
-	$obj.Description = $Description
-	Save-Resource $obj	# put in comment for testing
-	$id = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name -AttributesToGet ObjectID 
-	return $id.ObjectID.Value
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Name", $Name)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType ObjectTypeDescription -State Create -Changes $changes -ApplyNow
+	[GUID] $id = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name
+	return $id
 }
 
 Function Update-ObjectType {
@@ -634,11 +413,13 @@ Function Update-ObjectType {
 		[String]
 		$Description
 	)
-	$obj = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name 
-	$obj.DisplayName = $DisplayName
-	$obj.Description = $Description
-	Save-Resource $obj	 # put in comment for testing
-	return $obj.ObjectID.Value
+	$anchor = @{'Name' = $name}
+	$changes = @{}
+	$changes.Add("DisplayName", $DisplayName)
+	$changes.Add("Description", $Description)
+	New-FimImportObject -ObjectType ObjectTypeDescription -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	[GUID] $id = Get-FimObjectID -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name
+	return $id
 }
 
 Function Remove-ObjectType {
@@ -657,9 +438,7 @@ Function Remove-ObjectType {
 		[String]
 		$Name
 	)
-	Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name | Remove-Resource
-	$id = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $Name -AttributesToGet ObjectID
-	Remove-Resource -ID $id.ObjectID.Value
+	Remove-FimObject -AnchorName Name -AnchorValue $Name -ObjectType ObjectTypeDescription
 }
 
 Function New-ObjectTypeConfiguration {
