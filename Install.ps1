@@ -28,5 +28,15 @@ if($admin -eq $false) {
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Rcdc") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Schema") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Sspr") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
+	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Migrate") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
+	if(Get-Module -ListAvailable | Where-Object{$_.Name -eq "LithnetRMA"}){
+		if(!(Get-Module -Name LithnetRMA)) {
+			Import-Module LithnetRMA
+		}
+	} else {
+		$ExePath = $PSScriptRoot
+		Start-Process -FilePath "$ExePath\Lithnet.ResourceManagement.Automation.msi"
+		Import-Module LithnetRMA
+	}
 }
 Write-Host "Modules successfully deployed."

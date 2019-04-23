@@ -320,7 +320,14 @@ Function New-Workflow {
 		[ValidateScript({("Authorization", "Authentication", "Action") -contains $_})]
 		$RequestPhase
 	)
-
+	$resource = New-Resource -ObjectType WorkflowDefinition
+	$resource.DisplayName = $DisplayName
+	$resource.RequestPhase = $RequestPhase
+	$resource.XOML = $Xoml
+	Save-Resource $resource
+	$id = Get-Resource -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
+	return $id.ObjectID.Value
+	<#
 	$changes = @{}
 	$changes.Add("DisplayName", $DisplayName)
 	$changes.Add("RequestPhase", $RequestPhase)
@@ -328,6 +335,7 @@ Function New-Workflow {
 	New-FimImportObject -ObjectType WorkflowDefinition -State Create -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $displayName
 	return $id
+	#>
 }
 
 Function Update-Workflow {
@@ -350,13 +358,18 @@ Function Update-Workflow {
 		[String]
 		$Xoml
 	)
-
+	$resource = Get-Resource -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $DisplayName
+	$resource.XOML = $Xoml
+	Save-Resource $resource
+	return $resource.ObjectID.Value
+	<#
 	$anchor = @{'DisplayName' = $displayName}
 	$changes = @{}
 	$changes.Add("XOML", $Xoml)
 	New-FimImportObject -ObjectType WorkflowDefinition -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $displayName
 	return $id
+	#>
 }
 
 Function Remove-Workflow {
@@ -372,7 +385,8 @@ Function Remove-Workflow {
 		[String]
 		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType WorkflowDefinition
+	Get-Resource -ObjectType WorkflowDefinition -AttributeName DisplayName -AttributeValue $DisplayName | Remove-Resource
+	#Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType WorkflowDefinition
 }
 
 Function New-Mpr {
@@ -390,11 +404,15 @@ Function New-Mpr {
 
 		[Parameter(Mandatory=$True)]
         [UniqueIdentifier]
-		$PrincipalSetId,
+		$PrincipalSet,
 		
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
-		$SetId,
+		$ResourceCurrentSet,
+
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ResourceFinalSet,
 		
 		[Parameter(Mandatory=$True)]
 		[Array]
@@ -415,11 +433,11 @@ Function New-Mpr {
 		
 		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$AuthWfId,
+		$AuthenticationWorkflowDefinition,
 
 		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$ActionWfId,
+		$ActionWorkflowDefinition,
 
 		[Parameter(Mandatory=$False)]
 		[String]
@@ -430,30 +448,20 @@ Function New-Mpr {
 		[String]
 		$Description
 	)
-	$changes = @()
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Description' -AttributeValue $Description
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
-	foreach($param in $ActionParameter) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
+	$global:resource = New-Resource -ObjectType ManagementPolicyRule
+	foreach($boundparam in $PSBoundParameters.GetEnumerator()) {
+		if ($boundparam.Key -eq "ActionParameter" -or $boundparam.Key -eq "ActionType") { 	## array
+			foreach($item in $boundparam){		
+				$global:resource.($boundparam.key) += $item.Value
+			}
+		} else {																			## variable
+			$global:resource.($boundparam.Key) = $boundparam.Value
+		}
 	}
-	foreach($action in $ActionType) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
-	}
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ManagementPolicyRuleType' -AttributeValue $ManagementPolicyRuleType
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Disabled' -AttributeValue $Disabled
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceCurrentSet' -AttributeValue $SetId.ToString()
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceFinalSet' -AttributeValue $SetId.ToString()
-	if($ActionWfId -ne $null) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
-	}
-	if($AuthWfId -ne $null) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
-	}
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Create -Changes $changes -ApplyNow
-	[GUID] $id = Get-FimObjectID -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
-	return $id
+	Save-Resource $resource # put in comment for testing
+	$id = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
+	return $id.ObjectID.Value # put in comment for testing
+	#return $resource ## testing purposes
 }
 
 Function Update-Mpr {
@@ -471,11 +479,15 @@ Function Update-Mpr {
 
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
-		$PrincipalSetId,
+		$PrincipalSet,
 		
 		[Parameter(Mandatory=$True)]
 		[UniqueIdentifier]
-		$SetId,
+		$ResourceCurrentSet,
+
+		[Parameter(Mandatory=$True)]
+		[UniqueIdentifier]
+		$ResourceFinalSet,
 
 		[Parameter(Mandatory=$True)]
 		[Array]
@@ -492,11 +504,11 @@ Function Update-Mpr {
 		
 		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$AuthWfId,
+		$AuthenticationWorkflowDefinition,
 
 		[Parameter(Mandatory=$False)]
 		[UniqueIdentifier]
-		$ActionWfId,
+		$ActionWorkflowDefinition,
 
 		[Parameter(Mandatory=$False)]
 		[String]
@@ -507,29 +519,19 @@ Function Update-Mpr {
 		[String]
 		$Description
 	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @()
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Description' -AttributeValue $Description
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'PrincipalSet' -AttributeValue $PrincipalSetId.ToString()
-	foreach($param in $ActionParameter) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $param
+	$global:resource = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
+	foreach($boundparam in $PSBoundParameters.GetEnumerator()) {
+		if ($boundparam.Key -eq "ActionParameter" -or $boundparam.Key -eq "ActionType") { 	## array
+			foreach($item in $boundparam){		
+				$global:resource.($boundparam.key) += $item.Value
+			}
+		} else {																			## variable
+			$global:resource.($boundparam.Key) = $boundparam.Value
+		}
 	}
-	foreach($action in $ActionType) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionType' -AttributeValue $action
-	}
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'GrantRight' -AttributeValue $GrantRight
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Disabled' -AttributeValue $Disabled
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceCurrentSet' -AttributeValue $SetId.ToString()
-	$changes += New-FimImportChange -Operation 'None' -AttributeName 'ResourceFinalSet' -AttributeValue $SetId.ToString()
-	if($ActionWfId -ne $null) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ActionWorkflowDefinition' -AttributeValue $ActionWfId.ToString()
-	}
-	if($AuthWfId -ne $null) {
-		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'AuthenticationWorkflowDefinition' -AttributeValue $AuthWfId.ToString()
-	}
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
-	[GUID] $id = Get-FimObjectID -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
-	return $id
+	Save-Resource $resource # put in comment for testing
+	return $obj.ObjectId.Value # put in comment for testing
+	#return $resource ## testing purposes
 }
 
 Function Remove-Mpr {
@@ -545,7 +547,8 @@ Function Remove-Mpr {
 		[String]
 		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType ManagementPolicyRule
+	$id = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID 
+	Remove-Resource -ID $id.ObjectID.Value
 }
 
 Function Enable-Mpr {
@@ -563,10 +566,10 @@ Function Enable-Mpr {
 		[Parameter(Mandatory=$True)]
 		$DisplayName
 	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @{}
-	$changes.Add("Disabled", $false)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$resource = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
+	$resource.Disabled = $false
+	Save-Resource $resource # put in comment for testing
+	#return $resource		## Testing purposes
 }
 
 Function Disable-Mpr {
@@ -584,10 +587,10 @@ Function Disable-Mpr {
 		[Parameter(Mandatory=$True)]
 		$DisplayName
 	)
-	$anchor = @{'DisplayName' = $DisplayName}
-	$changes = @{}
-	$changes.Add("Disabled", $true)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$resource = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $DisplayName
+	$resource.Disabled = $True
+	Save-Resource $resource # put in comment for testing
+	# return $resource ## Testing purposes
 }
 
 Function Add-AttributeToMpr {
@@ -610,9 +613,11 @@ Function Add-AttributeToMpr {
 		[String]
 		$MprName
 	)
-	$anchor = @{'DisplayName' = $MprName}
-	$changes = @(New-FimImportChange -Operation 'Add' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$resource = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $MprName `
+	-AttributesToGet ActionParameter
+	$resource.ActionParameter += $AttrName
+	Save-Resource $resource # put in comment for testing
+	#return $resource		## Testing purposes
 }
 
 Function Remove-AttributeFromMpr {
@@ -635,9 +640,12 @@ Function Remove-AttributeFromMpr {
 		[String]
 		$MprName
 	)
-	$anchor = @{'DisplayName' = $MprName}
-	$changes = @(New-FimImportChange -Operation 'Delete' -AttributeName 'ActionParameter' -AttributeValue $AttrName)
-	New-FimImportObject -ObjectType ManagementPolicyRule -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	$resource = Get-Resource -ObjectType ManagementPolicyRule -AttributeName DisplayName -AttributeValue $MprName `
+	-AttributesToGet ActionParameter
+	$tempArray = $resource.ActionParameter -ne $AttrName	## return array without member with value of $AttrName
+	$resource.ActionParameter = $tempArray					## place the tempArray in the resource.ActionParameter array
+	Save-Resource $resource # put in comment for testing
+	#return $resource	## Testing purposes
 }
 
 Function New-Set {
@@ -661,6 +669,15 @@ Function New-Set {
 		[String]
 		$Description
 	)
+	$resource = New-Resource -ObjectType Set
+	$resource.DisplayName = $DisplayName
+	$resource.Description = $Description
+	$filter = Get-Filter $Condition
+	$resource.Filter = $filter
+	Save-Resource $resource
+	$id = Get-Resource -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
+	return $id.ObjectID.Value
+	<#
 	$changes = @{}
 	$changes.Add("DisplayName", $DisplayName)
 	$changes.Add("Description", $Description)
@@ -669,6 +686,7 @@ Function New-Set {
 	New-FimImportObject -ObjectType Set -State Create -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName
 	return $id
+	#>
 }
 
 Function Update-Set {
@@ -692,6 +710,13 @@ Function Update-Set {
 		[String]
 		$Description
 	)
+	$resource = Get-Resource -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName
+	$filter = Get-Filter $Condition
+	$resource.Filter = $filter
+	$resource.Description = $Description
+	Save-Resource $resource
+	return $resource.ObjectID.Value
+	<#
 	$anchor = @{'DisplayName' = $DisplayName}
 	$filter = Get-Filter $Condition
 	$changes = @{}
@@ -700,6 +725,7 @@ Function Update-Set {
 	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow
 	[GUID] $id = Get-FimObjectID -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName
 	return $id
+	#>
 }
 
 Function Remove-Set {
@@ -715,7 +741,8 @@ Function Remove-Set {
 		[String]
 		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType Set
+	Get-Resource -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName | Remove-Resource
+	#Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType Set
 }
 
 Function Add-ObjectToSet {
@@ -738,10 +765,15 @@ Function Add-ObjectToSet {
 		[UniqueIdentifier]
 		$ObjectId
 	)
+	$resource = Get-Resource -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName
+	$resource.ExplicitMember += $ObjectId.Value
+	Save-Resource $resource
+	<#
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'Add' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
 	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+	#>
 }
 
 Function Remove-ObjectFromSet {
@@ -764,10 +796,16 @@ Function Remove-ObjectFromSet {
 		[UniqueIdentifier]
 		$ObjectId
 	)
+	$resource = Get-Resource -ObjectType Set -AttributeName DisplayName -AttributeValue $DisplayName
+	$tempArray = $resource.ExplicitMember -ne $ObjectId.ToString()	## return array without member with value of $AttrName
+	$resource.ExplicitMember = $tempArray
+	Save-Resource $resource
+	<#
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'Delete' -AttributeName 'ExplicitMember' -AttributeValue $ObjectId.ToString()
 	New-FimImportObject -ObjectType Set -State Put -Anchor $anchor -Changes $changes -ApplyNow	
+	#>
 }
 
 Function Get-SetMemberships {
@@ -1096,6 +1134,20 @@ Function New-SearchScope {
 		[Array]
 		$UsageKeyWords
 	)
+	$resource = New-Resource -ObjectType SearchScopeConfiguration
+	$resource.DisplayName = $DisplayName
+	$resoure.Order = $Order
+	$resource.SearchScope = "/$ObjectType"
+	$resource.SearchScopeContext += $Context
+	$resource.SearchScopeColumn = $Column
+	$resource.SearchScopeResultObjectType = $ObjectType
+	$resource.SearchScopeTargetURL = "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$resource.IsConfigurationType = $True
+	foreach($keyword in $UsageKeyWords){
+		$resource.UsageKeyword += $keyword
+	}
+	Save-Resource $resource
+	<#
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
@@ -1109,6 +1161,7 @@ Function New-SearchScope {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType SearchScopeConfiguration -State Create -Changes $changes -ApplyNow
+	#>
 }
 
 Function Update-SearchScope {
@@ -1144,6 +1197,19 @@ Function Update-SearchScope {
 		[Array]
 		$UsageKeyWords
 	)
+	$resource = Get-Resource -ObjectType SearchScopeConfiguration -AttributeName DisplayName -AttributeValue $DisplayName
+	$resoure.Order = $Order
+	$resource.SearchScope = "/$ObjectType"
+	$resource.SearchScopeContext += $Context
+	$resource.SearchScopeColumn = $Column
+	$resource.SearchScopeResultObjectType = $ObjectType
+	$resource.SearchScopeTargetURL = "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$resource.IsConfigurationType = $True
+	foreach($keyword in $UsageKeyWords){
+		$resource.UsageKeyword += $keyword
+	}
+	Save-Resource $resource
+	<#
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'Order' -AttributeValue $Order
@@ -1157,6 +1223,7 @@ Function Update-SearchScope {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType SearchScopeConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	#>
 }
 
 Function Remove-SearchScope {
@@ -1172,7 +1239,8 @@ Function Remove-SearchScope {
 		[String]
 		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType SearchScopeConfiguration
+	Get-Resource -ObjectType SearchScopeConfiguration -AttributeName DisplayName -AttributeValue $DisplayName | Remove-Resource
+	#Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType SearchScopeConfiguration
 }
 
 Function New-NavigationBar {
@@ -1204,6 +1272,17 @@ Function New-NavigationBar {
 		[Array]
 		$UsageKeyWords
 	)
+	$resource = New-Resource -ObjectType NavigationBarConfiguration
+	$resource.DisplayName = $DisplayName
+	$resource.NavigationUrl = "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$resource.Order = $Order
+	$resource.ParentOrder = $ParentOrder
+	$resource.IsConfigurationType = $True
+	foreach($keyword in $UsageKeyWords) {
+		$resource.UsageKeyword += $keyword
+	}
+	Save-Resource $resource
+	<#
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'DisplayName' -AttributeValue $DisplayName
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'NavigationUrl' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
@@ -1214,6 +1293,7 @@ Function New-NavigationBar {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType NavigationBarConfiguration -State Create -Changes $changes -ApplyNow
+	#>
 }
 
 Function Update-NavigationBar {
@@ -1245,6 +1325,16 @@ Function Update-NavigationBar {
 		[Array]
 		$UsageKeyWords
 	)
+	$resource = Get-Resource -ObjectType NavigationBarConfiguration -AttributeName DisplayName -AttributeValue $DisplayName
+	$resource.NavigationUrl = "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
+	$resource.Order = $Order
+	$resource.ParentOrder = $ParentOrder
+	$resource.IsConfigurationType = $True
+	foreach($keyword in $UsageKeyWords) {
+		$resource.UsageKeyword += $keyword
+	}
+	Save-Resource $resource
+	<#
 	$anchor = @{'DisplayName' = $DisplayName}
 	$changes = @()
 	$changes += New-FimImportChange -Operation 'None' -AttributeName 'NavigationUrl' -AttributeValue "~/IdentityManagement/aspx/customized/CustomizedObjects.aspx?type=$ObjectType&display=$ObjectType"
@@ -1255,6 +1345,7 @@ Function Update-NavigationBar {
 		$changes += New-FimImportChange -Operation 'Add' -AttributeName 'UsageKeyword' -AttributeValue $keyword
 	}
 	New-FimImportObject -ObjectType NavigationBarConfiguration -State Put -Anchor $anchor -Changes $changes -ApplyNow
+	#>
 }
 
 Function Remove-NavigationBar {
@@ -1270,5 +1361,6 @@ Function Remove-NavigationBar {
 		[String]
 		$DisplayName
 	)
-	Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType NavigationBarConfiguration
+	Get-Resource -ObjectType NavigationBarConfiguration -AttributeName DisplayName -AttributeValue $DisplayName | Remove-Resource
+	#Remove-FimObject -AnchorName DisplayName -AnchorValue $DisplayName -ObjectType NavigationBarConfiguration
 }
