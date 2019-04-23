@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Lithnet.ResourceManagement.ConfigSync>
+  <Operations>
+    <ResourceOperation operation="Add Update" resourceType="Person" id="1">
+      <AnchorAttributes>
+        <AnchorAttribute>Name</AnchorAttribute>
+      </AnchorAttributes>
+      <AttributeOperations>
+        <AttributeOperation operation="replace" name="Name">Test1</AttributeOperation>
+        <AttributeOperation operation="replace" name="Rank">User</AttributeOperation>
+      </AttributeOperations>
+    </ResourceOperation>
+  </Operations>
+</Lithnet.ResourceManagement.ConfigSync>
