@@ -29,7 +29,6 @@ if($admin -eq $false) {
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Schema") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Sspr") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
 	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Migrate") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
-	Copy-Item (Join-Path $dir ".\IS4U.FimPortal.Migrate.Json") "$Env:ProgramFiles\WindowsPowerShell\Modules" -Recurse -Force
 	if(Get-Module -ListAvailable | Where-Object{$_.Name -eq "LithnetRMA"}){
 		if(!(Get-Module -Name LithnetRMA)) {
 			Import-Module LithnetRMA

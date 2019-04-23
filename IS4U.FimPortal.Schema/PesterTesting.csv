@@ -1,0 +1,5 @@
+SystemName,DisplayName,DataType,MultiValued,ObjectType
+BirthDay,Birth date,DateTime,False,Person
+EmployeeNumber,Employee number,String,False,Person
+RoleDistributionList,Role gets a distribution list,Boolean,False,Group
+
