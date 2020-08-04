@@ -366,14 +366,14 @@ Function New-Binding {
 		[String]
 		$ObjectType = "Person"
 	)
-	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectId
-	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectId
+	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectID
+	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectID
 	$obj = New-Resource -ObjectType BindingDescription
 	$obj.Required = $Required
 	$obj.DisplayName = $DisplayName
 	$obj.Description = $Description
-	$obj.BoundAttributeType = $attrId#.ObjectId.Value 	## for testing
-	$obj.BoundObjectType = $objId#.ObjectId.Value		## for testing
+	$obj.BoundAttributeType = $attrId#.ObjectID.Value 	## for testing
+	$obj.BoundObjectType = $objId#.ObjectID.Value		## for testing
 	Save-Resource $obj
 	$id = Get-Resource -ObjectType BindingDescription -AttributeName DisplayName -AttributeValue $DisplayName -AttributesToGet ObjectID
 	return $id.ObjectID.Value
@@ -420,7 +420,7 @@ Function Update-Binding {
 	$attrId = Get-Resource -ObjectType AttributeTypeDescription -AttributeName Name -AttributeValue $AttributeName -AttributesToGet ObjectID
 	$objId = Get-Resource -ObjectType ObjectTypeDescription -AttributeName Name -AttributeValue $ObjectType -AttributesToGet ObjectID
 	$id = Get-Resource -ObjectType BindingDescription -AttributeValuePairs `
-	@{BoundAttributeType = $attrId.ObjectId.Value; BoundObjectType=$objId.ObjectId.Value} -AttributesToGet ObjectID
+	@{BoundAttributeType = $attrId.ObjectID.Value; BoundObjectType=$objId.ObjectID.Value} -AttributesToGet ObjectID
 	$obj = Get-Resource -ID $id.ObjectID.Value
 	$obj.Required = $Required
 	$obj.DisplayName = $DisplayName
