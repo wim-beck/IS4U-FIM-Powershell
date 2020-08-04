@@ -1136,7 +1136,7 @@ Function New-SearchScope {
 	)
 	$resource = New-Resource -ObjectType SearchScopeConfiguration
 	$resource.DisplayName = $DisplayName
-	$resoure.Order = $Order
+	$resource.Order = $Order
 	$resource.SearchScope = "/$ObjectType"
 	$resource.SearchScopeContext += $Context
 	$resource.SearchScopeColumn = $Column
